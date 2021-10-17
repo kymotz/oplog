@@ -1,7 +1,7 @@
 package com.example.demo.aspect;
 
 
-import com.example.demo.parse.LogRecordOperationSource;
+import com.example.demo.core.LogRecordOperationSource;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.aop.support.StaticMethodMatcherPointcut;

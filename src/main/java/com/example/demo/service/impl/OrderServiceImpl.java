@@ -1,6 +1,6 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.annotation.LogRecordAnnotation;
+import com.example.demo.annotation.LogRecord;
 import com.example.demo.entity.Order;
 import com.example.demo.service.IOrderService;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class OrderServiceImpl implements IOrderService {
 
     @Override
-    @LogRecordAnnotation(success = "success")
+    @LogRecord(success = "success", bizNo = "123")
     public void insert(Order order) {
         System.out.println("插入订单成功：" + order);
 //        throw new RuntimeException("主动抛异常");

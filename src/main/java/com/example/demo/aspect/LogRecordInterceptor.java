@@ -1,15 +1,9 @@
 package com.example.demo.aspect;
 
 import com.example.demo.entity.LogRecordOps;
-import com.example.demo.entity.MethodExecuteResult;
-import com.example.demo.parse.LogRecordContext;
-import com.example.demo.parse.LogRecordOperationSource;
 import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.springframework.aop.Pointcut;
-import org.springframework.aop.support.AbstractBeanFactoryPointcutAdvisor;
-import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -18,7 +12,7 @@ import java.util.*;
 public class LogRecordInterceptor implements MethodInterceptor {
 
     // LogRecord的解析类
-    private LogRecordOperationSource logRecordOperationSource;
+//    private LogRecordOperationSource logRecordOperationSource;
 
     private LogRecordPointcut pointcut = new LogRecordPointcut();
 

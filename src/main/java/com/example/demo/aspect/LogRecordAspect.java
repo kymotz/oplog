@@ -1,72 +1,158 @@
 package com.example.demo.aspect;
 
-import com.example.demo.annotation.LogRecordAnnotation;
+import com.example.demo.annotation.LogRecord;
+import com.example.demo.core.*;
+import com.example.demo.entity.LogRecordOps;
+import com.example.demo.entity.MethodProceedResult;
+import com.example.demo.entity.Record;
+import com.example.demo.factory.ParseFunctionFactory;
+import com.example.demo.service.IFunctionService;
+import com.example.demo.service.ILogRecordService;
+import com.example.demo.service.IParseFunction;
+import com.example.demo.service.impl.DefaultFunctionServiceImpl;
+import com.example.demo.service.impl.DefaultLogRecordServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.context.expression.AnnotatedElementKey;
+import org.springframework.core.DefaultParameterNameDiscoverer;
+import org.springframework.expression.TypedValue;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.util.*;
 
 @Component
 @Aspect
 @Slf4j
 public class LogRecordAspect {
 
+    LogRecordOperationSource logRecordOperationSource = new LogRecordOperationSource();
+    LogRecordExpressionEvaluator logRecordExpressionEvaluator = new LogRecordExpressionEvaluator();
+    ILogRecordService logRecordService = new DefaultLogRecordServiceImpl();
+
+    IFunctionService functionService = new DefaultFunctionServiceImpl(new ParseFunctionFactory(Arrays.asList(new IParseFunction() {
+//        LogRecordValueParser logRecordValueParser = new LogRecordValueParser()
+        @Override
+        public String functionName() {
+            return "getUserName";
+        }
+
+        @Override
+        public String apply(String value) {
+
+            return null;
+        }
+    })));
+
     // 注解切入
-    @Pointcut("@annotation(com.example.demo.annotation.LogRecordAnnotation)")
-    public void pointCut(){
-
+    @Pointcut("@annotation(com.example.demo.annotation.LogRecord)")
+    public void pointCut() {
     }
-
-//    @Pointcut("execution(* com.example.demo.service.impl.OrderServiceImpl.insert(..))")
-//    public void pointCut(){}
-
-//    @Before(value = "pointCut()")
-//    public void beforeAdd() {
-//        System.out.println("插入前...");
-//    }
-
-    /* After 在 AfterRunning 之后，之后添加的AfterRunning在已添加的AfterRunning之前 */
-
-//    @After(value = "pointCut()")
-//    public void afterAdd() {
-//        System.out.println("插入后...1");
-//    }
-//
-//    @AfterReturning(value = "pointCut()", returning = "ret")
-//    public void afterAdd2(JoinPoint joinPoint, Object ret) {
-//        System.out.println("插入后...2; return = " + ret);
-//    }
-//
-//    @AfterReturning(pointcut = "pointCut()", returning = "ret")
-//    public void afterAdd3(JoinPoint joinPoint, Object ret) {
-//        System.out.println("插入后...3; return = " + ret);
-//    }
 
     @Around(value = "pointCut()")
-    public void aroundOperate(ProceedingJoinPoint point) {
+    public Object logRecordAround(ProceedingJoinPoint point) throws Throwable {
         System.out.println("point.getArgs() = " + Arrays.toString(point.getArgs()));
-
-        MethodSignature signature = (MethodSignature)point.getSignature();
-        Method method = signature.getMethod();
-        LogRecordAnnotation logRecord = method.getAnnotation(LogRecordAnnotation.class);
-
-        try {
-            point.proceed();
-        } catch (Throwable e) {
-            log.error("point.proceed() 执行错误");
-        }
-        doRecord(point);
+        return recordLog(point);
     }
 
-    private void doRecord(ProceedingJoinPoint point) {
+    private Object recordLog(ProceedingJoinPoint point) throws Throwable {
+        MethodSignature signature = (MethodSignature) point.getSignature();
+        // 标记@LogRecord的方法
+        Method method = signature.getMethod();
+        System.out.println("method.getName() = " + method.getName());
+        // 标记@LogRecord的方法的class，即OrderServiceImpl
+        Class<?> targetClass = point.getTarget().getClass();
+//        System.out.println("targetClass.getSimpleName() = " + targetClass.getSimpleName());
+        System.out.println("----");
+        // 标记@LogRecord的方法的参数
+        Object[] args = point.getArgs();
+        Object ret = null;
+        LogRecord logRecord = method.getAnnotation(LogRecord.class);
+        if (logRecord == null) {
+            return null;
+        }
+
+        MethodProceedResult methodProceedResult = new MethodProceedResult(true, null, "");
+        // 执行方法前入栈空map
+        LogRecordContext.putEmptySpan();
+
+        // 解析的LogRecord的属性
+        Collection<LogRecordOps> operations = new ArrayList<>();
+
+        Map<String, String> functionNameAndReturnMap = new HashMap<>();
+
+        try {
+            operations = logRecordOperationSource.computeLogRecordOperations(method, targetClass);
+            System.out.println(Arrays.toString(operations.toArray()));
+
+            List<String> spElTemplates = getBeforeExecuteFunctionTemplate(operations);
+
+            // 业务逻辑执行前的自定义函数解析
+            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(spElTemplates, targetClass, method, args);
+            for (Map.Entry<String, String> entry : functionNameAndReturnMap.entrySet()) {
+                System.out.println(entry.getKey()+"  "+entry.getValue());
+            }
+        } catch (Exception e) {
+            log.error("log record parse before function exception", e);
+        }
+        try {
+            ret = point.proceed();
+        } catch (Throwable e) {
+            methodProceedResult = new MethodProceedResult(false, e, e.getMessage());
+        }
+        try {
+            if (!CollectionUtils.isEmpty(operations)) {
+                recordExecute(ret, method, args, operations, targetClass,
+                        methodProceedResult.isSuccess(), methodProceedResult.getErrMsg(), functionNameAndReturnMap);
+            }
+        } catch (Exception t) {
+            //记录日志错误不要影响业务
+            log.error("log record parse exception", t);
+        } finally {
+            LogRecordContext.clear();
+        }
+        if (methodProceedResult.getThrowable() != null) {
+            throw methodProceedResult.getThrowable();
+        }
+        return ret;
+    }
+
+    private List<String> getBeforeExecuteFunctionTemplate(Collection<LogRecordOps> operations) {
+        List<String> templates = new ArrayList<>();
+        for (LogRecordOps o : operations) {
+            templates.add(o.getValue());
+        }
+
+        return templates;
+    }
+
+    private Map<String, String> processBeforeExecuteFunctionTemplate(List<String> spElTemplates, Class<?> targetClass, Method method, Object[] args) {
+        final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL, method, args, new DefaultParameterNameDiscoverer(), null, null);
+        LogRecordValueParser logRecordParser = new LogRecordValueParser(logRecordEvaluationContext, logRecordExpressionEvaluator);
+        Map<String, String> functionNameAndReturnMap = new HashMap<>();
+
+        for (String template : spElTemplates) {
+            AnnotatedElementKey methodKey = new AnnotatedElementKey(method, targetClass);
+            // process
+//            final String name = functionService.apply("getUserName", op.getValue());
+//            String parseStr = logRecordParser.parseExpression(op.getValue(), methodKey);
+//            functionNameAndReturnMap.put(op.getKey(), parseStr);
+        }
+        return functionNameAndReturnMap;
+    }
+
+    private void recordExecute(Object ret, Method method, Object[] args, Collection<LogRecordOps> operations, Class<?> targetClass, boolean success, String errMsg, Map<String, String> functionNameAndReturnMap) {
+        final LogRecordEvaluationContext ctx = new LogRecordEvaluationContext(TypedValue.NULL, method, args, new DefaultParameterNameDiscoverer(), ret, errMsg);
+        //
 
 
+        for(LogRecordOps op : operations){
+
+        }
+        logRecordService.record(new Record());
     }
 
     @AfterThrowing(value = "pointCut()", throwing = "e")
