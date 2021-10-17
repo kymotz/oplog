@@ -17,11 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class LogRecordExpressionEvaluator extends CachedExpressionEvaluator {
 
-    private Map<ExpressionKey, Expression> expressionCache = new ConcurrentHashMap<>(64);
+    private final static Map<ExpressionKey, Expression> expressionCache = new ConcurrentHashMap<>(64);
 
-    private final Map<AnnotatedElementKey, Method> targetMethodCache = new ConcurrentHashMap<>(64);
+    private final static Map<AnnotatedElementKey, Method> targetMethodCache = new ConcurrentHashMap<>(64);
 
-    public static final TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext("#{", "}");
+    public final static TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext("#{", "}");
 
     private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser() {
         @Override

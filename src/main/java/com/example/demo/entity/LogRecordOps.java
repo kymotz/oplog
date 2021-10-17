@@ -1,12 +1,16 @@
 package com.example.demo.entity;
 
 
+import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 
-public class LogRecordOps {
+public class LogRecordOps{
     private String  key;
     private String  value;
-    private boolean templated = true;
+    private boolean isTemplate = true;
+    private List<String> functionNames;
+    private boolean beforeExecute;
 
     public LogRecordOps(){
 
@@ -33,20 +37,38 @@ public class LogRecordOps {
         this.value = value;
     }
 
-    public boolean isTemplated() {
-        return templated;
+    public boolean isTemplate() {
+        return isTemplate;
     }
 
-    public void setTemplated(boolean templated) {
-        this.templated = templated;
+    public void setTemplate(boolean template) {
+        this.isTemplate = template;
+    }
+
+    public List<String> getFunctionNames() {
+        return functionNames;
+    }
+
+    public void setFunctionNames(List<String> functionNames) {
+        this.functionNames = functionNames;
+    }
+
+    public boolean isBeforeExecute() {
+        return beforeExecute;
+    }
+
+    public void setBeforeExecute(boolean beforeExecute) {
+        this.beforeExecute = beforeExecute;
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", LogRecordOps.class.getSimpleName() + "[", "]")
-                .add("key='" + key + "'")
-                .add("value='" + value + "'")
-                .add("templated=" + templated)
-                .toString();
+        return "LogRecordOps{" +
+                "key='" + key + '\'' +
+                ", value='" + value + '\'' +
+                ", isTemplate=" + isTemplate +
+                ", functionNames=" + functionNames +
+                ", beforeExecute=" + beforeExecute +
+                '}';
     }
 }

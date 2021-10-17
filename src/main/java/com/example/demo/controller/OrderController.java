@@ -26,8 +26,8 @@ public class OrderController {
         return orderService.getOrderById(id);
     }
 
-    @LogRecord(success = "创建订单成功了，订单号为：#bizNo", bizNo = "1001",
-               fail = "创建订单失败", operator = "admin")
+    @LogRecord(success = "创建订单成功了，订单号为：{#order.id}", bizNo = "{#order.id}",
+               fail = "创建订单失败", operator = "{#order.name}")
     @ApiOperation("插入订单")
     @ApiImplicitParam(name = "order", value = "订单", paramType = "body", dataType = "Order")
     @PostMapping

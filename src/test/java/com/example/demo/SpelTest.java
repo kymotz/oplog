@@ -90,7 +90,8 @@ public class SpelTest {
     }
 
     public static class StringHelper {
-        public static boolean isValid(String url) {
+        public static Boolean isValid(String url) {
+            System.out.println("input str : " + url);
             return true;
         }
     }
@@ -102,10 +103,13 @@ public class SpelTest {
             context.registerFunction("isURLValid",
                     StringHelper.class.getDeclaredMethod("isValid", new Class[]{String.class}));
 
+            context.setVariable("url", "http://google.com");
             context.registerFunction("isUrl", StringHelper.class.getDeclaredMethod("isValid", String.class));
-            String expression = "#isURLValid('http://google.com')";
+            String expression = "res : {#isURLValid(#url)}";
 
-            Boolean isValid = parser.parseExpression(expression).getValue(context, Boolean.class);
+            String isValid = parser.parseExpression(expression,
+                    new TemplateParserContext("{", "}")).getValue(context, String.class);
+
             System.out.println(isValid);
         } catch (Exception e) {
             e.printStackTrace();

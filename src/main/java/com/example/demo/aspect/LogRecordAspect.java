@@ -21,6 +21,7 @@ import org.springframework.expression.TypedValue;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -38,19 +39,22 @@ public class LogRecordAspect {
 
     LogRecordValueParser parser = new LogRecordValueParser(null, logRecordExpressionEvaluator);
 
-    IFunctionService functionService = new DefaultFunctionServiceImpl(new ParseFunctionFactory(Arrays.asList(new IParseFunction() {
+
+    ParseFunctionFactory fact = new ParseFunctionFactory(Arrays.asList(new IParseFunction() {
         //LogRecordValueParser logRecordValueParser = new LogRecordValueParser()
         @Override
         public String functionName() {
             return "calc";
         }
+
         @Override
         public String apply(String value) {
 
             return "500";
         }
-    })));
+    }));
 
+    IFunctionService functionService = new DefaultFunctionServiceImpl(fact);
 
     // 注解切入
     @Pointcut("@annotation(com.example.demo.annotation.LogRecord)")
@@ -94,14 +98,14 @@ public class LogRecordAspect {
             operations = logRecordOperationSource.computeLogRecordOperations(method, targetClass);
             System.out.println(Arrays.toString(operations.toArray()));
 
-            // 生成teamplate，
-            List<String> spElTemplates = getBeforeExecuteFunctionTemplate(operations);
+            // 生成提前运行的功能名字
+            List<String> functionNames = getBeforeExecuteFunctionName(operations);
 
             // 处理spel模版，把非模版的也解析出来
             // 业务逻辑执行前的自定义函数 解析
-            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(operations, spElTemplates, targetClass, method, args);
+            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(operations, functionNames, targetClass, method, args);
             for (Map.Entry<String, String> entry : functionNameAndReturnMap.entrySet()) {
-                System.out.println(entry.getKey()+"  "+entry.getValue());
+                System.out.println(entry.getKey() + "  " + entry.getValue());
             }
         } catch (Exception e) {
             log.error("log record parse before function exception", e);
@@ -129,44 +133,101 @@ public class LogRecordAspect {
         return ret;
     }
 
-    private List<String> getBeforeExecuteFunctionTemplate(Collection<LogRecordOps> operations) {
-        List<String> templates = new ArrayList<>();
+    private List<String> getBeforeExecuteFunctionName(List<LogRecordOps> operations) {
+        List<String> functionNames = new ArrayList<>();
         for (LogRecordOps o : operations) {
-            templates.add(o.getValue());
+            if (o.isTemplate() && o.isBeforeExecute()) {
+                for (String method : o.getFunctionNames()) {
+                    if (functionService.beforeFunction(method)) {
+                        functionNames.add(method);
+                    }
+                }
+            }
         }
-        return templates;
+        return functionNames;
     }
 
-    private Map<String, String> processBeforeExecuteFunctionTemplate(List<LogRecordOps> ops, List<String> spElTemplates,
+    private Map<String, String> processBeforeExecuteFunctionTemplate(List<LogRecordOps> ops, List<String> functionNames,
                                                                      Class<?> targetClass, Method method, Object[] args) {
 
         final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL,
                 method, args, new DefaultParameterNameDiscoverer(), null, null);
 
 
-
-        LogRecordValueParser logRecordParser = new LogRecordValueParser(logRecordEvaluationContext, logRecordExpressionEvaluator);
-        Map<String, String> functionNameAndReturnMap = new HashMap<>();
-
-        for (String template : spElTemplates) {
-            AnnotatedElementKey methodKey = new AnnotatedElementKey(method, targetClass);
-            // process
-//            final String name = functionService.apply("getUserName", op.getValue());
-//            String parseStr = logRecordParser.parseExpression(op.getValue(), methodKey);
-//            functionNameAndReturnMap.put(op.getKey(), parseStr);
+        try {
+            for (String func : functionNames) {
+                IParseFunction function = fact.getFunction(func);
+                if (function != null) {
+                    logRecordEvaluationContext.registerFunction(func, function.getClass().getMethod("apply", String.class));
+                }
+            }
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
         }
-        return functionNameAndReturnMap;
+
+        // 注册自定义函数
+        parser.setLogRecordEvaluationContext(logRecordEvaluationContext);
+        Map<String, String> executeTemplateAndReturnMap = new HashMap<>();
+
+        // target method class
+        AnnotatedElementKey methodKey = new AnnotatedElementKey(method, targetClass);
+        for (LogRecordOps op : ops) {
+            if (op.isTemplate() && op.isBeforeExecute()) {
+                String newTemplate = parser.parseExpression(op.getValue(), methodKey);
+                executeTemplateAndReturnMap.put(op.getKey(), newTemplate);
+            }
+        }
+        return executeTemplateAndReturnMap;
     }
 
-    private void recordExecute(Object ret, Method method, Object[] args, Collection<LogRecordOps> operations, Class<?> targetClass, boolean success, String errMsg, Map<String, String> functionNameAndReturnMap) {
-        final LogRecordEvaluationContext ctx = new LogRecordEvaluationContext(TypedValue.NULL, method, args, new DefaultParameterNameDiscoverer(), ret, errMsg);
-        //
+    private void recordExecute(Object ret, Method method,
+                               Object[] args, Collection<LogRecordOps> operations,
+                               Class<?> targetClass, boolean success,
+                               String errMsg, Map<String, String> executeTemplateMap) throws NoSuchFieldException, IllegalAccessException {
 
+        final LogRecordEvaluationContext ctx = new LogRecordEvaluationContext(TypedValue.NULL, method,
+                args, new DefaultParameterNameDiscoverer(), ret, errMsg);
 
-        for(LogRecordOps op : operations){
+        final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL,
+                method, args, new DefaultParameterNameDiscoverer(), null, null);
 
+        for (LogRecordOps op : operations) {
+            if (op.isTemplate()) {
+                try {
+                    for (String fn : op.getFunctionNames()) {
+                        IParseFunction func = fact.getFunction(fn);
+
+                        logRecordEvaluationContext.registerFunction(fn,
+                                func.getClass().getMethod("apply", String.class));
+                    }
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        logRecordService.record(new Record());
+
+        parser.setLogRecordEvaluationContext(ctx);
+
+        // target method class
+        AnnotatedElementKey methodKey = new AnnotatedElementKey(method, targetClass);
+
+        Record record = new Record();
+        Class<Record> clazz = Record.class;
+
+        for (LogRecordOps op : operations) {
+            String newTemplate = executeTemplateMap.get(op.getKey());
+            String str;
+            if(newTemplate != null){
+                str = parser.parseExpression(newTemplate, methodKey);
+            }else{
+                str = parser.parseExpression(op.getValue(), methodKey);
+            }
+            Field declaredField = clazz.getDeclaredField(op.getKey());
+            declaredField.setAccessible(true);
+            declaredField.set(record, str);
+        }
+
+        logRecordService.record(record);
     }
 
     @AfterThrowing(value = "pointCut()", throwing = "e")

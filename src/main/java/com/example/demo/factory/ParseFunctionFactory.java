@@ -31,4 +31,8 @@ public class ParseFunctionFactory {
     public boolean isBeforeFunction(String functionName) {
         return allFunctionMap.get(functionName) != null && allFunctionMap.get(functionName).executeBefore();
     }
+
+    public Map<String, IParseFunction> getAllFunctionMap(){
+        return allFunctionMap;
+    }
 }
