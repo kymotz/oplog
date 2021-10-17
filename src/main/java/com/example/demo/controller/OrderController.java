@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.annotation.LogRecord;
 import com.example.demo.entity.Order;
 import com.example.demo.service.IOrderService;
 import io.swagger.annotations.Api;
@@ -25,6 +26,8 @@ public class OrderController {
         return orderService.getOrderById(id);
     }
 
+    @LogRecord(success = "创建订单成功了，订单号为：#bizNo", bizNo = "1001",
+               fail = "创建订单失败", operator = "admin")
     @ApiOperation("插入订单")
     @ApiImplicitParam(name = "order", value = "订单", paramType = "body", dataType = "Order")
     @PostMapping

@@ -1,7 +1,9 @@
 package com.example.demo.core;
 
+import lombok.Data;
 import org.springframework.context.expression.AnnotatedElementKey;
 
+@Data
 public class LogRecordValueParser {
     LogRecordEvaluationContext logRecordEvaluationContext;
     LogRecordExpressionEvaluator expressionParser;

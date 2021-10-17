@@ -3,9 +3,11 @@ package com.example.demo.core;
 
 import org.springframework.context.expression.AnnotatedElementKey;
 import org.springframework.context.expression.CachedExpressionEvaluator;
+import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParseException;
+import org.springframework.expression.TypedValue;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -19,7 +21,7 @@ public class LogRecordExpressionEvaluator extends CachedExpressionEvaluator {
 
     private final Map<AnnotatedElementKey, Method> targetMethodCache = new ConcurrentHashMap<>(64);
 
-    private static final TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext("#{", "}");
+    public static final TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext("#{", "}");
 
     private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser() {
         @Override
@@ -31,6 +33,11 @@ public class LogRecordExpressionEvaluator extends CachedExpressionEvaluator {
     public LogRecordExpressionEvaluator() {
         super(EXPRESSION_PARSER);
     }
+
+    EvaluationContext createEvaluationContext(Method method, Object[] args, Class<?> targetClass,Object ret, String errorMsg, String beanFactory){
+        return new LogRecordEvaluationContext(TypedValue.NULL, method, args, new DefaultParameterNameDiscoverer(), ret, errorMsg);
+    }
+
 
     public String parseExpression(String conditionExpression, AnnotatedElementKey methodKey, EvaluationContext evalContext) {
         return getExpression(expressionCache, methodKey, conditionExpression).getValue(evalContext, String.class);

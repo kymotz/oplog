@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 public class OrderServiceImpl implements IOrderService {
 
     @Override
-    @LogRecord(success = "success", bizNo = "123")
     public void insert(Order order) {
         System.out.println("插入订单成功：" + order);
 //        throw new RuntimeException("主动抛异常");

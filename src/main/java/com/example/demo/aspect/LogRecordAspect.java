@@ -30,22 +30,27 @@ import java.util.*;
 public class LogRecordAspect {
 
     LogRecordOperationSource logRecordOperationSource = new LogRecordOperationSource();
-    LogRecordExpressionEvaluator logRecordExpressionEvaluator = new LogRecordExpressionEvaluator();
+
+    // 持久化日志日志
     ILogRecordService logRecordService = new DefaultLogRecordServiceImpl();
 
+    LogRecordExpressionEvaluator logRecordExpressionEvaluator = new LogRecordExpressionEvaluator();
+
+    LogRecordValueParser parser = new LogRecordValueParser(null, logRecordExpressionEvaluator);
+
     IFunctionService functionService = new DefaultFunctionServiceImpl(new ParseFunctionFactory(Arrays.asList(new IParseFunction() {
-//        LogRecordValueParser logRecordValueParser = new LogRecordValueParser()
+        //LogRecordValueParser logRecordValueParser = new LogRecordValueParser()
         @Override
         public String functionName() {
-            return "getUserName";
+            return "calc";
         }
-
         @Override
         public String apply(String value) {
 
-            return null;
+            return "500";
         }
     })));
+
 
     // 注解切入
     @Pointcut("@annotation(com.example.demo.annotation.LogRecord)")
@@ -76,11 +81,12 @@ public class LogRecordAspect {
         }
 
         MethodProceedResult methodProceedResult = new MethodProceedResult(true, null, "");
+
         // 执行方法前入栈空map
         LogRecordContext.putEmptySpan();
 
         // 解析的LogRecord的属性
-        Collection<LogRecordOps> operations = new ArrayList<>();
+        List<LogRecordOps> operations = new ArrayList<>();
 
         Map<String, String> functionNameAndReturnMap = new HashMap<>();
 
@@ -88,10 +94,12 @@ public class LogRecordAspect {
             operations = logRecordOperationSource.computeLogRecordOperations(method, targetClass);
             System.out.println(Arrays.toString(operations.toArray()));
 
+            // 生成teamplate，
             List<String> spElTemplates = getBeforeExecuteFunctionTemplate(operations);
 
-            // 业务逻辑执行前的自定义函数解析
-            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(spElTemplates, targetClass, method, args);
+            // 处理spel模版，把非模版的也解析出来
+            // 业务逻辑执行前的自定义函数 解析
+            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(operations, spElTemplates, targetClass, method, args);
             for (Map.Entry<String, String> entry : functionNameAndReturnMap.entrySet()) {
                 System.out.println(entry.getKey()+"  "+entry.getValue());
             }
@@ -104,6 +112,7 @@ public class LogRecordAspect {
             methodProceedResult = new MethodProceedResult(false, e, e.getMessage());
         }
         try {
+            // 持久化记录日志
             if (!CollectionUtils.isEmpty(operations)) {
                 recordExecute(ret, method, args, operations, targetClass,
                         methodProceedResult.isSuccess(), methodProceedResult.getErrMsg(), functionNameAndReturnMap);
@@ -125,12 +134,17 @@ public class LogRecordAspect {
         for (LogRecordOps o : operations) {
             templates.add(o.getValue());
         }
-
         return templates;
     }
 
-    private Map<String, String> processBeforeExecuteFunctionTemplate(List<String> spElTemplates, Class<?> targetClass, Method method, Object[] args) {
-        final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL, method, args, new DefaultParameterNameDiscoverer(), null, null);
+    private Map<String, String> processBeforeExecuteFunctionTemplate(List<LogRecordOps> ops, List<String> spElTemplates,
+                                                                     Class<?> targetClass, Method method, Object[] args) {
+
+        final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL,
+                method, args, new DefaultParameterNameDiscoverer(), null, null);
+
+
+
         LogRecordValueParser logRecordParser = new LogRecordValueParser(logRecordEvaluationContext, logRecordExpressionEvaluator);
         Map<String, String> functionNameAndReturnMap = new HashMap<>();
 
