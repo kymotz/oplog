@@ -11,7 +11,7 @@ public class LogRecordOperationSource {
     private final static int DEFAULT_OPS_SIZE = 7;
 
     private final String templatePrefix = LogRecordExpressionEvaluator.TEMPLATE_PARSER_CONTEXT.getExpressionPrefix();
-
+    private final String templateSuffix = LogRecordExpressionEvaluator.TEMPLATE_PARSER_CONTEXT.getExpressionSuffix();
     private char prefix = '#';
     private char suffix = '(';
 
@@ -20,7 +20,7 @@ public class LogRecordOperationSource {
 
     public LogRecordOperationSource() {
         supportChars = new HashSet<>();
-        String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY_"+prefix+suffix;
+        String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY_"+prefix+suffix+templatePrefix+templateSuffix;
         for (char c : str.toCharArray()) {
             supportChars.add(c);
         }

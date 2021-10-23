@@ -16,7 +16,7 @@ public class LogRecordValueParser {
     }
 
     public String parseExpression(String expression, AnnotatedElementKey methodKey){
-        System.out.println("methodKey.getClass().getSimpleName() = " + methodKey.getClass().getSimpleName());
+        System.out.println("methodKey.getClass() = " + methodKey.getClass());
         return expressionParser.parseExpression(expression, methodKey,logRecordEvaluationContext);
     }
 

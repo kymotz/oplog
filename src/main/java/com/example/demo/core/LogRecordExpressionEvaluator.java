@@ -21,7 +21,7 @@ public class LogRecordExpressionEvaluator extends CachedExpressionEvaluator {
 
     private final static Map<AnnotatedElementKey, Method> targetMethodCache = new ConcurrentHashMap<>(64);
 
-    public final static TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext("#{", "}");
+    public final static TemplateParserContext TEMPLATE_PARSER_CONTEXT = new TemplateParserContext("{", "}");
 
     private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser() {
         @Override

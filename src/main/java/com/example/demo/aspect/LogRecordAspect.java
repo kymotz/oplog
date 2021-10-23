@@ -11,6 +11,7 @@ import com.example.demo.service.ILogRecordService;
 import com.example.demo.service.IParseFunction;
 import com.example.demo.service.impl.DefaultFunctionServiceImpl;
 import com.example.demo.service.impl.DefaultLogRecordServiceImpl;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -39,7 +40,6 @@ public class LogRecordAspect {
 
     LogRecordValueParser parser = new LogRecordValueParser(null, logRecordExpressionEvaluator);
 
-
     ParseFunctionFactory fact = new ParseFunctionFactory(Arrays.asList(new IParseFunction() {
         //LogRecordValueParser logRecordValueParser = new LogRecordValueParser()
         @Override
@@ -47,12 +47,16 @@ public class LogRecordAspect {
             return "calc";
         }
 
-        @Override
         public String apply(String value) {
-
-            return "500";
+            return Integer.parseInt(value) * 2 + "";
         }
     }));
+
+    static class ParseFunction {
+        static String apply(String value){
+            return Integer.parseInt(value) * 2 +"";
+        }
+    }
 
     IFunctionService functionService = new DefaultFunctionServiceImpl(fact);
 
@@ -97,13 +101,13 @@ public class LogRecordAspect {
         try {
             operations = logRecordOperationSource.computeLogRecordOperations(method, targetClass);
             System.out.println(Arrays.toString(operations.toArray()));
-
+            System.out.println("----");
             // 生成提前运行的功能名字
             List<String> functionNames = getBeforeExecuteFunctionName(operations);
 
             // 处理spel模版，把非模版的也解析出来
             // 业务逻辑执行前的自定义函数 解析
-            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(operations, functionNames, targetClass, method, args);
+            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(operations, functionNames, logRecord, targetClass, method, args);
             for (Map.Entry<String, String> entry : functionNameAndReturnMap.entrySet()) {
                 System.out.println(entry.getKey() + "  " + entry.getValue());
             }
@@ -147,16 +151,16 @@ public class LogRecordAspect {
         return functionNames;
     }
 
-    private Map<String, String> processBeforeExecuteFunctionTemplate(List<LogRecordOps> ops, List<String> functionNames,
+    private Map<String, String> processBeforeExecuteFunctionTemplate(List<LogRecordOps> ops, List<String> functionNames, LogRecord logRecord,
                                                                      Class<?> targetClass, Method method, Object[] args) {
 
-        final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL,
+        final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(logRecord,
                 method, args, new DefaultParameterNameDiscoverer(), null, null);
-
 
         try {
             for (String func : functionNames) {
                 IParseFunction function = fact.getFunction(func);
+                System.out.println("注解中使用的自定义函数：" + function.functionName());
                 if (function != null) {
                     logRecordEvaluationContext.registerFunction(func, function.getClass().getMethod("apply", String.class));
                 }
@@ -168,6 +172,8 @@ public class LogRecordAspect {
         // 注册自定义函数
         parser.setLogRecordEvaluationContext(logRecordEvaluationContext);
         Map<String, String> executeTemplateAndReturnMap = new HashMap<>();
+
+//        System.out.println("logRecordEvaluationContext.lookupVariable(\"order\") = " + logRecordEvaluationContext.lookupVariable("order"));
 
         // target method class
         AnnotatedElementKey methodKey = new AnnotatedElementKey(method, targetClass);
@@ -185,28 +191,32 @@ public class LogRecordAspect {
                                Class<?> targetClass, boolean success,
                                String errMsg, Map<String, String> executeTemplateMap) throws NoSuchFieldException, IllegalAccessException {
 
-        final LogRecordEvaluationContext ctx = new LogRecordEvaluationContext(TypedValue.NULL, method,
-                args, new DefaultParameterNameDiscoverer(), ret, errMsg);
-
         final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL,
-                method, args, new DefaultParameterNameDiscoverer(), null, null);
+                method, args, new DefaultParameterNameDiscoverer(), ret, errMsg);
 
-        for (LogRecordOps op : operations) {
-            if (op.isTemplate()) {
-                try {
-                    for (String fn : op.getFunctionNames()) {
-                        IParseFunction func = fact.getFunction(fn);
-
-                        logRecordEvaluationContext.registerFunction(fn,
-                                func.getClass().getMethod("apply", String.class));
-                    }
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                }
-            }
+        try {
+            logRecordEvaluationContext.registerFunction("calc",
+                    ParseFunction.class.getDeclaredMethod("apply", String.class));
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
         }
+//        for (LogRecordOps op : operations) {
+//            if (op.isTemplate()) {
+//                try {
+//                    for (String fn : op.getFunctionNames()) {
+//                        IParseFunction function = fact.getFunction(fn);
+//                        System.out.println("注解中使用的自定义函数 after：" + function.functionName());
+//                        System.out.println("apply methods ----  "+function.getClass().getDeclaredMethod("apply", String.class));
+//                        logRecordEvaluationContext.registerFunction(fn,
+//                                function.getClass().getDeclaredMethod("apply", String.class));
+//                    }
+//                } catch (NoSuchMethodException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
 
-        parser.setLogRecordEvaluationContext(ctx);
+        parser.setLogRecordEvaluationContext(logRecordEvaluationContext);
 
         // target method class
         AnnotatedElementKey methodKey = new AnnotatedElementKey(method, targetClass);
@@ -222,6 +232,7 @@ public class LogRecordAspect {
             }else{
                 str = parser.parseExpression(op.getValue(), methodKey);
             }
+            System.out.println("final parse result: "+str);
             Field declaredField = clazz.getDeclaredField(op.getKey());
             declaredField.setAccessible(true);
             declaredField.set(record, str);
