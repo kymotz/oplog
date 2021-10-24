@@ -1,2 +1,9 @@
-server :
-  port : 8090
+
+log-record:
+  config:
+    template-prefix: "{"
+    template-suffix: "}"
+
+server:
+  port: 8080
+

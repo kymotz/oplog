@@ -1,7 +1,6 @@
 package com.elltor.oplog.conf;
 
 import com.elltor.oplog.annotation.EnableLogRecord;
-import com.elltor.oplog.annotation.LogRecord;
 import com.elltor.oplog.core.LogRecordExpressionEvaluator;
 import com.elltor.oplog.core.LogRecordOperationSource;
 import com.elltor.oplog.core.LogRecordValueParser;
@@ -15,23 +14,28 @@ import com.elltor.oplog.service.impl.DefaultOperatorGetServiceImpl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportAware;
-import org.springframework.context.annotation.Role;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.*;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
 
 import java.util.List;
 
 @Configuration
-@EnableAutoConfiguration
+@ComponentScan(basePackages = {"com.elltor.oplog.*"})
+@EnableConfigurationProperties(LogRecordConfigProperties.class)
 public class LogRecordProxyAutoConfiguration implements ImportAware {
 
     private AnnotationAttributes enableLogRecord;
+
+    private LogRecordConfigProperties logRecordConfigProperties;
+
+    // 构造器注入
+    public LogRecordProxyAutoConfiguration(LogRecordConfigProperties logRecordConfigProperties) {
+        this.logRecordConfigProperties = logRecordConfigProperties;
+        System.out.println("构造器注入 starter");
+    }
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)

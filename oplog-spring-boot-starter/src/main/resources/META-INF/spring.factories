@@ -1,3 +1,2 @@
-# auto configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.elltor.oplog.conf.LogRecordProxyAutoConfiguration
