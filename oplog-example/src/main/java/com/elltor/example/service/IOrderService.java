@@ -1,6 +1,6 @@
-package com.elltor.oplog.service;
+package com.elltor.example.service;
 
-import com.elltor.oplog.entity.Order;
+import com.elltor.example.entity.Order;
 
 
 public interface IOrderService {

@@ -1,4 +1,4 @@
-package com.elltor.oplog.entity;
+package com.elltor.example.entity;
 
 import lombok.Data;
 import lombok.ToString;

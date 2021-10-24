@@ -1,8 +1,8 @@
-package com.elltor.oplog.service.impl;
+package com.elltor.example.service.impl;
 
-import com.elltor.oplog.service.IOrderService;
+import com.elltor.example.entity.Order;
+import com.elltor.example.service.IOrderService;
 import com.elltor.oplog.annotation.LogRecord;
-import com.elltor.oplog.entity.Order;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

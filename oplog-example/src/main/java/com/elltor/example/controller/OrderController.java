@@ -1,8 +1,8 @@
-package com.elltor.oplog.controller;
+package com.elltor.example.controller;
 
+import com.elltor.example.entity.Order;
+import com.elltor.example.service.IOrderService;
 import com.elltor.oplog.annotation.LogRecord;
-import com.elltor.oplog.service.IOrderService;
-import com.elltor.oplog.entity.Order;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;

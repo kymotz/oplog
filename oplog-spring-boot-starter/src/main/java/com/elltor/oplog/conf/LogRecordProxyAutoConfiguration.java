@@ -1,6 +1,7 @@
 package com.elltor.oplog.conf;
 
 import com.elltor.oplog.annotation.EnableLogRecord;
+import com.elltor.oplog.annotation.LogRecord;
 import com.elltor.oplog.core.LogRecordExpressionEvaluator;
 import com.elltor.oplog.core.LogRecordOperationSource;
 import com.elltor.oplog.core.LogRecordValueParser;
@@ -11,9 +12,11 @@ import com.elltor.oplog.service.IParseFunction;
 import com.elltor.oplog.service.impl.CalcParseFunction;
 import com.elltor.oplog.service.impl.DefaultLogRecordServiceImpl;
 import com.elltor.oplog.service.impl.DefaultOperatorGetServiceImpl;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,7 +28,7 @@ import org.springframework.core.type.AnnotationMetadata;
 import java.util.List;
 
 @Configuration
-@Slf4j
+@EnableAutoConfiguration
 public class LogRecordProxyAutoConfiguration implements ImportAware {
 
     private AnnotationAttributes enableLogRecord;
@@ -76,7 +79,8 @@ public class LogRecordProxyAutoConfiguration implements ImportAware {
         this.enableLogRecord = AnnotationAttributes.fromMap(
                 importMetadata.getAnnotationAttributes(EnableLogRecord.class.getName(), false));
         if (this.enableLogRecord == null) {
-            log.info("@EnableCaching is not present on importing class");
+//            log.info("@EnableCaching is not present on importing class");
+            System.err.println("@EnableCaching is not present on importing class");
         }
     }
 }
