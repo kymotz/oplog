@@ -35,11 +35,12 @@ public class LogRecordProxyAutoConfiguration implements ImportAware {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public LogRecordOperationFactory logRecordOperationSource() {
+    public LogRecordOperationFactory logRecordOperationFactory() {
         return new LogRecordOperationFactory();
     }
 
     @Bean
+    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     public ParseFunctionFactory parseFunctionFactory(@Autowired List<IParseFunction> parseFunctions) {
         return new ParseFunctionFactory(parseFunctions);
     }
