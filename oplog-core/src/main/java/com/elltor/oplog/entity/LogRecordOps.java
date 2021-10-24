@@ -2,13 +2,22 @@ package com.elltor.oplog.entity;
 
 import java.util.List;
 
+/**
+ * 日志选项POJO
+ */
+
 public class LogRecordOps {
+
     private String key;
+
     private String value;
+
     private boolean isTemplate = true;
+
     private List<String> functionNames;
 
     public LogRecordOps() {
+
     }
 
     public LogRecordOps(String key, String value) {
@@ -50,11 +59,12 @@ public class LogRecordOps {
 
     @Override
     public String toString() {
-        return "LogRecordOps{" +
-                "key='" + key + '\'' +
-                ", value='" + value + '\'' +
-                ", isTemplate=" + isTemplate +
-                ", functionNames=" + functionNames +
-                '}';
+        final StringBuilder sb = new StringBuilder("LogRecordOps{");
+        sb.append("key='").append(key).append('\'');
+        sb.append(", value='").append(value).append('\'');
+        sb.append(", isTemplate=").append(isTemplate);
+        sb.append(", functionNames=").append(functionNames);
+        sb.append('}');
+        return sb.toString();
     }
 }

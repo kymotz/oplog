@@ -1,18 +1,24 @@
 package com.elltor.oplog.aspect;
 
 import com.elltor.oplog.annotation.LogRecord;
-import com.elltor.oplog.core.*;
-import com.elltor.oplog.service.IParseFunction;
+import com.elltor.oplog.core.LogRecordContext;
+import com.elltor.oplog.core.LogRecordEvaluationContext;
+import com.elltor.oplog.core.LogRecordValueParser;
 import com.elltor.oplog.entity.LogRecordOps;
-import com.elltor.oplog.entity.MethodProceedResult;
+import com.elltor.oplog.entity.ProceedResult;
 import com.elltor.oplog.entity.Record;
+import com.elltor.oplog.factory.LogRecordOperationFactory;
 import com.elltor.oplog.factory.ParseFunctionFactory;
 import com.elltor.oplog.service.ILogRecordService;
-
-import lombok.extern.slf4j.Slf4j;
+import com.elltor.oplog.service.IParseFunction;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.expression.AnnotatedElementKey;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -26,113 +32,124 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Component
+/**
+ * 日志处理切面
+ */
+
 @Aspect
-@Slf4j
+@Component
 public class LogRecordAspect {
 
+    /**/
     @Resource
-    private LogRecordOperationSource logRecordOperationSource;
+    private LogRecordOperationFactory logRecordOperationFactory;
 
-    // 持久化日志日志
+    /**
+     * 持久化日志日志
+     */
     @Resource
     private ILogRecordService logRecordService;
 
-    @Resource
-    private LogRecordExpressionEvaluator logRecordExpressionEvaluator;
-
+    /**
+     * 模板解析
+     */
     @Resource
     private LogRecordValueParser parser;
 
+    /**
+     * 解析函数工具方法
+     */
     @Resource
     private ParseFunctionFactory fact;
 
+    /**
+     * 缓存日志注解
+     */
     private ConcurrentHashMap<AnnotatedElementKey, LogRecord> targetAnnotationCache = new ConcurrentHashMap<>();
 
     private ParameterNameDiscoverer parameterNameDiscover = new DefaultParameterNameDiscoverer();
 
+    private Logger log = LoggerFactory.getLogger(LogRecordAspect.class);
+
     // 注解切入
     @Pointcut("@annotation(com.elltor.oplog.annotation.LogRecord)")
-    public void pointCut() {
-    }
+    public void pointCut() { /*仅作为切面调用标记*/}
 
     @Around(value = "pointCut()")
     public Object logRecordAround(ProceedingJoinPoint point) throws Throwable {
-        System.out.println("point.getArgs() = " + Arrays.toString(point.getArgs()));
-        return recordLog(point);
+        return processRecordLog(point);
     }
 
-    private Object recordLog(ProceedingJoinPoint point) throws Throwable {
+    /**
+     * 处理切面日志
+     */
+    private Object processRecordLog(ProceedingJoinPoint point) throws Throwable {
         Object[] args = point.getArgs();
         Method targetMethod = ((MethodSignature) point.getSignature()).getMethod();
         Class<?> targetClass = point.getTarget().getClass();
         AnnotatedElementKey targetMethodKey = new AnnotatedElementKey(targetMethod, targetClass);
-
         LogRecord logRecord = getTargetAnnotationOrUpdateCache(targetMethodKey, point);
-
         Object ret = null;
 
         if (logRecord == null) {
             return null;
         }
 
-        MethodProceedResult methodProceedResult = new MethodProceedResult(true, null, "");
+        ProceedResult proceedResult = new ProceedResult(true, null, "OK");
 
         // 执行方法前入栈空map
         LogRecordContext.putEmptySpan();
 
         // 解析的LogRecord的属性
-        List<LogRecordOps> operators = new ArrayList<>();
-
-        Map<String, String> functionNameAndReturnMap = new HashMap<>();
-
+        List<LogRecordOps> operations;
+        Map<String, String> functionNameAndReturnMap;
+        operations = logRecordOperationFactory.computeLogRecordOperations(logRecord);
+        // 过滤提前执行的函数
+        List<String> beforeExecuteFunctionNames = filterOperationFunctionNames(true, operations);
+        // 业务逻辑执行前的自定义函数 解析
         try {
-            operators = logRecordOperationSource.computeLogRecordOperations(logRecord);
-            for (LogRecordOps op : operators) {
-                System.out.println(op);
-            }
-            System.out.println("----");
-
-            List<String> beforeExecuteFunctionNames = filterOperateFunctionNames(true, operators);
-
-            // 处理spel模版，把非模版的也解析出来
-            // 业务逻辑执行前的自定义函数 解析
-            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(beforeExecuteFunctionNames, operators,
-                    targetMethod, args, targetMethodKey);
-
-            for (Map.Entry<String, String> entry : functionNameAndReturnMap.entrySet()) {
-                System.out.println(entry.getKey() + "  " + entry.getValue());
-            }
+            functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(beforeExecuteFunctionNames,
+                    operations, targetMethod, args, targetMethodKey);
         } catch (Exception e) {
-            log.error("log record parse before function exception", e);
+            throw new Exception(proceedResult.getErrMsg());
         }
         try {
             ret = point.proceed();
         } catch (Throwable e) {
-            methodProceedResult = new MethodProceedResult(false, e, e.getMessage());
+            proceedResult = new ProceedResult(false, e, e.getMessage());
         }
         try {
             // 持久化记录日志
-            if (!CollectionUtils.isEmpty(operators)) {
-                recordExecute(ret, targetMethod, args, operators,
-                        methodProceedResult.isSuccess(), methodProceedResult.getErrMsg(),
-                        functionNameAndReturnMap, targetMethodKey);
+            if (!CollectionUtils.isEmpty(operations)) {
+                recordExecute(ret, targetMethod, args, operations, proceedResult.isSuccess(),
+                        proceedResult.getErrMsg(), functionNameAndReturnMap, targetMethodKey);
             }
         } catch (Exception t) {
-            //记录日志错误不要影响业务
+            proceedResult = new ProceedResult(false, t, t.getMessage());
+            // 记录日志错误
             log.error("log record parse exception", t);
         } finally {
             LogRecordContext.clear();
         }
-        if (methodProceedResult.getThrowable() != null) {
-            throw methodProceedResult.getThrowable();
+        if (proceedResult.getThrowable() != null) {
+            throw proceedResult.getThrowable();
         }
         return ret;
     }
 
+    /**
+     * 处理提前执行的函数
+     *
+     * @param beforeExecuteFunctions 提前执行函数集合
+     * @param operations             模板操作集合
+     * @param targetMethod           目标方法
+     * @param args                   目标方法入参
+     * @param targetMethodKey        目标方法标识key
+     * @return 处理的模板操作的key与处理后模板的映射map
+     */
     private Map<String, String> processBeforeExecuteFunctionTemplate(List<String> beforeExecuteFunctions,
-                                                                     List<LogRecordOps> operators,
-                                                                     Method method,
+                                                                     List<LogRecordOps> operations,
+                                                                     Method targetMethod,
                                                                      Object[] args,
                                                                      AnnotatedElementKey targetMethodKey) {
 
@@ -141,7 +158,7 @@ public class LogRecordAspect {
         }
 
         final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL,
-                method, args, parameterNameDiscover, null, null);
+                targetMethod, args, parameterNameDiscover, null, null);
 
         registerSpELFunction(beforeExecuteFunctions, logRecordEvaluationContext);
 
@@ -149,7 +166,7 @@ public class LogRecordAspect {
         parser.setLogRecordEvaluationContext(logRecordEvaluationContext);
         Map<String, String> executeTemplateAndReturnMap = new HashMap<>();
 
-        for (LogRecordOps op : operators) {
+        for (LogRecordOps op : operations) {
             if (!op.isTemplate()) {
                 continue;
             }
@@ -159,29 +176,42 @@ public class LogRecordAspect {
                 executeTemplateAndReturnMap.put(op.getKey(), newTemplate);
             }
         }
-
         return executeTemplateAndReturnMap;
     }
 
-    private void recordExecute(Object ret, Method method,
-                               Object[] args, List<LogRecordOps> operators,
-                               boolean success,
+    /**
+     * 持久化存储操作日志
+     *
+     * @param ret                方法返回值
+     * @param targetMethod       目标方法
+     * @param args               目标方法入参
+     * @param operations         目标操作集合
+     * @param complete           是否成功
+     * @param errMsg             错误信息
+     * @param executeTemplateMap 提前执行的模板
+     * @param targetMethodKey    目标方法标识key
+     * @throws NoSuchFieldException
+     * @throws IllegalAccessException
+     */
+    private void recordExecute(Object ret, Method targetMethod,
+                               Object[] args, List<LogRecordOps> operations,
+                               boolean complete,
                                String errMsg, Map<String, String> executeTemplateMap,
                                AnnotatedElementKey targetMethodKey) throws NoSuchFieldException, IllegalAccessException {
 
         final LogRecordEvaluationContext logRecordEvaluationContext = new LogRecordEvaluationContext(TypedValue.NULL,
-                method, args, parameterNameDiscover, ret, errMsg);
+                targetMethod, args, parameterNameDiscover, ret, errMsg);
 
-        List<String> functionNames = filterOperateFunctionNames(false, operators);
-
+        // 注册自定义函数
+        List<String> functionNames = filterOperationFunctionNames(false, operations);
         registerSpELFunction(functionNames, logRecordEvaluationContext);
-
         parser.setLogRecordEvaluationContext(logRecordEvaluationContext);
 
+        // 持久化日志POJO
         Record record = new Record();
         Class<Record> clazz = Record.class;
 
-        for (LogRecordOps op : operators) {
+        for (LogRecordOps op : operations) {
             String key = op.getKey();
             String value;
             String oldTemplate = executeTemplateMap.get(key);
@@ -198,22 +228,21 @@ public class LogRecordAspect {
             declaredField.setAccessible(true);
             declaredField.set(record, value);
         }
-
+        record.setComplete(complete);
         logRecordService.record(record);
     }
 
     @AfterThrowing(value = "pointCut()", throwing = "e")
     public void afterThrowException(Exception e) {
-        e.printStackTrace();
-        System.out.println("报错了; e=" + e.getMessage());
+        log.error("切面处理过程中出错, 错误原因: {}", e.getMessage());
     }
 
-    private List<String> filterOperateFunctionNames(boolean isBeforeExecute,
-                                                    List<LogRecordOps> operators) {
+    private List<String> filterOperationFunctionNames(boolean isBeforeExecute,
+                                                      List<LogRecordOps> operations) {
 
-        List<String> filterFuncNames = new ArrayList<>(operators.size() * 2);
+        List<String> filterFuncNames = new ArrayList<>(operations.size() * 2);
         if (isBeforeExecute) {
-            for (LogRecordOps op : operators) {
+            for (LogRecordOps op : operations) {
                 if (!op.isTemplate()) {
                     continue;
                 }
@@ -224,7 +253,7 @@ public class LogRecordAspect {
                 }
             }
         } else {
-            for (LogRecordOps op : operators) {
+            for (LogRecordOps op : operations) {
                 filterFuncNames.addAll(op.getFunctionNames());
             }
         }
@@ -240,10 +269,9 @@ public class LogRecordAspect {
             IParseFunction function = fact.getFunction(fn);
             if (function == null) {
                 it.remove();
-                log.error("bad 非法 函数！！！！");
+                log.error("在向SpEL Context中注册自定义函数出错, 函数不存在, 函数名: {}", fn);
                 continue;
             }
-            System.out.println("函数名 " + fn);
             ctx.registerFunction(fn, function.functionMethod());
         }
     }
@@ -262,4 +290,5 @@ public class LogRecordAspect {
             return logRecord;
         }
     }
+
 }

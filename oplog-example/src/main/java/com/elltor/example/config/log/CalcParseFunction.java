@@ -1,4 +1,4 @@
-package com.elltor.oplog.service.impl;
+package com.elltor.example.config.log;
 
 import com.elltor.oplog.service.IParseFunction;
 import org.springframework.stereotype.Component;

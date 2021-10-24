@@ -1,11 +1,17 @@
 package com.elltor.oplog.core;
 
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
+
 public class LogRecordContext {
+
+    private static Logger log = LoggerFactory.getLogger(LogRecordContext.class);
 
     private static final InheritableThreadLocal<Stack<Map<String, Object>>> LOCAL_VALUABLES;
 

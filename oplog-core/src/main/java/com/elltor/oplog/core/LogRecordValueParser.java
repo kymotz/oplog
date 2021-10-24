@@ -2,6 +2,9 @@ package com.elltor.oplog.core;
 
 import org.springframework.context.expression.AnnotatedElementKey;
 
+/**
+ * SpEL 模板解析器
+ */
 
 public class LogRecordValueParser {
 
@@ -18,19 +21,8 @@ public class LogRecordValueParser {
         return expressionParser.parseExpression(expression, methodKey, logRecordEvaluationContext);
     }
 
-    public LogRecordEvaluationContext getLogRecordEvaluationContext() {
-        return logRecordEvaluationContext;
-    }
-
     public void setLogRecordEvaluationContext(LogRecordEvaluationContext logRecordEvaluationContext) {
         this.logRecordEvaluationContext = logRecordEvaluationContext;
     }
 
-    public LogRecordExpressionEvaluator getExpressionParser() {
-        return expressionParser;
-    }
-
-    public void setExpressionParser(LogRecordExpressionEvaluator expressionParser) {
-        this.expressionParser = expressionParser;
-    }
 }

@@ -1,4 +1,4 @@
-package com.elltor.oplog.core;
+package com.elltor.oplog.factory;
 
 import com.elltor.oplog.annotation.LogRecord;
 import com.elltor.oplog.entity.LogRecordOps;
@@ -6,23 +6,40 @@ import com.elltor.oplog.entity.LogRecordOps;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class LogRecordOperationSource {
+public class LogRecordOperationFactory {
 
     private final static int DEFAULT_OPS_SIZE = 7;
 
-    private final String templatePrefix = LogRecordExpressionEvaluator.TEMPLATE_PARSER_CONTEXT.getExpressionPrefix();
-    private final String templateSuffix = LogRecordExpressionEvaluator.TEMPLATE_PARSER_CONTEXT.getExpressionSuffix();
+    /**
+     * @see com.elltor.oplog.core.CustomSpelExpressionParser
+     */
+    private final String templatePrefix = "{";
+
+    /**
+     * @see com.elltor.oplog.core.CustomSpelExpressionParser
+     */
+    private final String templateSuffix = "}";
+
     private char prefix = '#';
+
     private char suffix = '(';
+
+    private String base = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY_";
 
     private static Set<Character> supportChars;
 
     private static ConcurrentHashMap<LogRecord, List<LogRecordOps>> recordOperatorsCache = new ConcurrentHashMap<>();
 
-    public LogRecordOperationSource() {
+    public LogRecordOperationFactory() {
         supportChars = new HashSet<>();
-        String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY_" + prefix + suffix + templatePrefix + templateSuffix;
-        for (char c : str.toCharArray()) {
+        StringBuilder sb = new StringBuilder(128);
+        sb.append(base)
+                .append(prefix)
+                .append(suffix)
+                .append(templatePrefix)
+                .append(templateSuffix);
+
+        for (char c : sb.toString().toCharArray()) {
             supportChars.add(c);
         }
     }
@@ -83,7 +100,6 @@ public class LogRecordOperationSource {
             op.setFunctionNames(new ArrayList<>(0));
         }
     }
-
 
     /**
      * 解析自定义函数

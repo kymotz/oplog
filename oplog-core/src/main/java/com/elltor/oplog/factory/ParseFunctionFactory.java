@@ -8,6 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 解析函数工具方法
+ */
+
 public class ParseFunctionFactory {
 
     private Map<String, IParseFunction> allFunctionMap;

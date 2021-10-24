@@ -1,8 +1,16 @@
 package com.elltor.oplog.entity;
 
 
-public class Operator {
+import java.io.Serializable;
+
+/**
+ * 操作日志的操作用户
+ */
+
+public class Operator implements Serializable {
+
     private String name;
+
     private String username;
 
     public Operator() {
@@ -29,4 +37,14 @@ public class Operator {
     public void setUsername(String username) {
         this.username = username;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Operator{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", username='").append(username).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
 }

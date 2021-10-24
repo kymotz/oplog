@@ -1,6 +1,7 @@
 package com.elltor.example.controller;
 
 import com.elltor.example.entity.Order;
+import com.elltor.example.entity.Result;
 import com.elltor.example.service.IOrderService;
 import com.elltor.oplog.annotation.LogRecord;
 import io.swagger.annotations.Api;
@@ -27,15 +28,17 @@ public class OrderController {
     }
 
     @LogRecord(success = "创建订单成功了，订单号为：{#order.id}", bizNo = "{#order.id}",
-            fail = "{#calc(#order.id)}", operator = "{#order.name}", category = "ORDER_LOG")
+            fail = "失败订单id为: {#order.id}, 失败信息 errMsg : {#_errMsg}", operator = "{#order.name}", category = "ORDER_LOG",
+            detail = "返回值 msg : {#_ret.msg} 状态码为: {#_ret.status} 返回数据: {#_ret.data}"
+    )
     @ApiOperation("插入订单")
     @ApiImplicitParam(name = "order", value = "订单", paramType = "body", dataType = "Order")
     @PostMapping
-    public Object insertOrder(Order order) {
+    public Object insertOrder(Order order) throws Exception {
         long start = System.currentTimeMillis();
         orderService.insert(order);
 
         System.out.println("-------\n" + (System.currentTimeMillis() - start) + "\n---------");
-        return "OK";
+        return new Result("success!", 200, "nbnbnbnbn!!!");
     }
 }

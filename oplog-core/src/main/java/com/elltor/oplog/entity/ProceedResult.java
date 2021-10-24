@@ -1,11 +1,14 @@
 package com.elltor.oplog.entity;
 
-public class MethodProceedResult {
+public class ProceedResult {
+
     private boolean success;
+
     private Throwable throwable;
+
     private String errMsg;
 
-    public MethodProceedResult(boolean success, Throwable exception, String errMsg) {
+    public ProceedResult(boolean success, Throwable exception, String errMsg) {
         this.success = success;
         this.throwable = exception;
         this.errMsg = errMsg;

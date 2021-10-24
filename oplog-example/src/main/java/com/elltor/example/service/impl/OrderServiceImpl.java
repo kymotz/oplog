@@ -10,13 +10,13 @@ import java.time.LocalDateTime;
 @Service
 public class OrderServiceImpl implements IOrderService {
 
-    @LogRecord(success = "【2】创建订单成功了，订单号为：{#order.id}", bizNo = "【2】{#order.id}",
-            fail = "【2】{#calc(#order.id)}", operator = "【2】{#order.name}", category = "【2】ORDER_LOG")
+//    @LogRecord(success = "【2】创建订单成功了，订单号为：{#order.id}", bizNo = "【2】{#order.id}",
+//            fail = "【2】失败订单号为: {#order.id}", operator = "【2】{#order.name}", category = "【2】ORDER_LOG")
     @Override
-    public void insert(Order order) {
+    public void insert(Order order) throws Exception {
         order.setId(10001L);
         System.out.println("插入订单成功：" + order);
-//        throw new RuntimeException("主动抛异常");
+//        throw new Exception("主动抛异常");
     }
 
     @Override

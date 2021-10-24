@@ -4,19 +4,30 @@ package com.elltor.oplog.entity;
  * 与注解的字段保持一致
  */
 public class Record {
+
+    /** 成功模板 */
     String success;
 
+    /** 失败模板 */
     String fail;
 
+    /** 操作用户 */
     String operator;
 
+    /** 业务编号 */
     String bizNo;
 
+    /** 分类 */
     String category;
 
+    /** 详细信息/备注 */
     String detail;
 
+    /** 条件 */
     String condition;
+
+    /** 是否完成执行 */
+    boolean complete;
 
     public String getSuccess() {
         return success;
@@ -74,6 +85,14 @@ public class Record {
         this.condition = condition;
     }
 
+    public boolean isComplete() {
+        return complete;
+    }
+
+    public void setComplete(boolean complete) {
+        this.complete = complete;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Record{");
@@ -84,6 +103,7 @@ public class Record {
         sb.append(", category='").append(category).append('\'');
         sb.append(", detail='").append(detail).append('\'');
         sb.append(", condition='").append(condition).append('\'');
+        sb.append(", complete=").append(complete);
         sb.append('}');
         return sb.toString();
     }
