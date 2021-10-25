@@ -38,4 +38,5 @@ public class CustomSpelExpressionParser extends SpelExpressionParser {
     public void setSuffix(String suffix) {
         this.suffix = suffix;
     }
+
 }

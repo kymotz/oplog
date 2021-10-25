@@ -12,7 +12,9 @@ public class LogRecordValueParser {
 
     LogRecordExpressionEvaluator expressionParser;
 
-    public LogRecordValueParser(LogRecordEvaluationContext logRecordEvaluationContext, LogRecordExpressionEvaluator expressionParser) {
+    public LogRecordValueParser(LogRecordEvaluationContext logRecordEvaluationContext,
+                                LogRecordExpressionEvaluator expressionParser) {
+
         this.logRecordEvaluationContext = logRecordEvaluationContext;
         this.expressionParser = expressionParser;
     }

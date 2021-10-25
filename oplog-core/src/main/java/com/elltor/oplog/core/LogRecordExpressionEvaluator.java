@@ -33,7 +33,6 @@ public class LogRecordExpressionEvaluator extends CachedExpressionEvaluator {
                     .getValue(evalContext, String.class);
         }catch (Exception e){
             log.error("SpEl解析错误! 错误原因: {}", e.getMessage());
-            throw e;
         }
         return value;
     }

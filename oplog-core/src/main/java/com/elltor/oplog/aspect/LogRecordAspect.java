@@ -5,6 +5,7 @@ import com.elltor.oplog.core.LogRecordContext;
 import com.elltor.oplog.core.LogRecordEvaluationContext;
 import com.elltor.oplog.core.LogRecordValueParser;
 import com.elltor.oplog.entity.LogRecordOps;
+import com.elltor.oplog.entity.Operator;
 import com.elltor.oplog.entity.ProceedResult;
 import com.elltor.oplog.entity.Record;
 import com.elltor.oplog.factory.LogRecordOperationFactory;
@@ -234,11 +235,14 @@ public class LogRecordAspect {
             declaredField.setAccessible(true);
             declaredField.set(record, value);
         }
-        String operator = record.getOperator();
 
+        String operator = record.getOperator();
         // 操作用户
         if(operator == null || operator.isEmpty()){
-            record.setOperator(operatorGetService.getUser().getUsername());
+            Operator user = operatorGetService.getUser();
+            if(user != null){
+                record.setOperator(user.getUsername());
+            }
         }
 
         record.setComplete(complete);

@@ -25,7 +25,7 @@ public class LogRecordEvaluationContext extends MethodBasedEvaluationContext {
             setVariable(entry.getKey(), entry.getValue());
         }
 
-        //把方法的返回值和 ErrMsg 都放到 RootObject 中
+        //把方法的返回值和 errMsg 都放到 RootObject 中
         setVariable("_ret", ret);
         setVariable("_errMsg", errMsg);
     }
