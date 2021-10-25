@@ -1,2 +1,2 @@
-# operate-log
-a util for operate log
+# oplog
+a util for operating log
