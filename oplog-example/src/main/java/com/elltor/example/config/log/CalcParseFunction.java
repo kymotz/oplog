@@ -23,7 +23,7 @@ public class CalcParseFunction implements IParseFunction {
     }
 
     private static String calc(String val) {
-        return (Integer.parseInt(val) * 2) + "";
+        return String.valueOf(Integer.parseInt(val) * 2);
     }
 
 }

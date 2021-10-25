@@ -10,6 +10,7 @@ import com.elltor.oplog.entity.Record;
 import com.elltor.oplog.factory.LogRecordOperationFactory;
 import com.elltor.oplog.factory.ParseFunctionFactory;
 import com.elltor.oplog.service.ILogRecordService;
+import com.elltor.oplog.service.IOperatorGetService;
 import com.elltor.oplog.service.IParseFunction;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -62,6 +63,9 @@ public class LogRecordAspect {
     @Resource
     private ParseFunctionFactory fact;
 
+    @Resource
+    private IOperatorGetService operatorGetService;
+
     /**
      * 缓存日志注解
      */
@@ -105,7 +109,7 @@ public class LogRecordAspect {
         Map<String, String> functionNameAndReturnMap;
         operations = logRecordOperationFactory.computeLogRecordOperations(logRecord);
         // 过滤提前执行的函数
-        List<String> beforeExecuteFunctionNames = filterOperationFunctionNames(true, operations);
+        Set<String> beforeExecuteFunctionNames = filterOperationFunctionNames(true, operations);
         // 业务逻辑执行前的自定义函数 解析
         try {
             functionNameAndReturnMap = processBeforeExecuteFunctionTemplate(beforeExecuteFunctionNames,
@@ -147,7 +151,7 @@ public class LogRecordAspect {
      * @param targetMethodKey        目标方法标识key
      * @return 处理的模板操作的key与处理后模板的映射map
      */
-    private Map<String, String> processBeforeExecuteFunctionTemplate(List<String> beforeExecuteFunctions,
+    private Map<String, String> processBeforeExecuteFunctionTemplate(Set<String> beforeExecuteFunctions,
                                                                      List<LogRecordOps> operations,
                                                                      Method targetMethod,
                                                                      Object[] args,
@@ -203,7 +207,7 @@ public class LogRecordAspect {
                 targetMethod, args, parameterNameDiscover, ret, errMsg);
 
         // 注册自定义函数
-        List<String> functionNames = filterOperationFunctionNames(false, operations);
+        Set<String> functionNames = filterOperationFunctionNames(false, operations);
         registerSpELFunction(functionNames, logRecordEvaluationContext);
         parser.setLogRecordEvaluationContext(logRecordEvaluationContext);
 
@@ -213,13 +217,15 @@ public class LogRecordAspect {
 
         for (LogRecordOps op : operations) {
             String key = op.getKey();
-            String value;
+            String value = "";
             String oldTemplate = executeTemplateMap.get(key);
             if (op.isTemplate()) {
-                if (oldTemplate != null) {
-                    value = parser.parseExpression(oldTemplate, targetMethodKey);
-                } else {
-                    value = parser.parseExpression(op.getValue(), targetMethodKey);
+                if (functionNames.containsAll(op.getFunctionNames())) {
+                    if (oldTemplate != null) {
+                        value = parser.parseExpression(oldTemplate, targetMethodKey);
+                    } else {
+                        value = parser.parseExpression(op.getValue(), targetMethodKey);
+                    }
                 }
             } else {
                 value = op.getValue();
@@ -228,6 +234,13 @@ public class LogRecordAspect {
             declaredField.setAccessible(true);
             declaredField.set(record, value);
         }
+        String operator = record.getOperator();
+
+        // 操作用户
+        if(operator == null || operator.isEmpty()){
+            record.setOperator(operatorGetService.getUser().getUsername());
+        }
+
         record.setComplete(complete);
         logRecordService.record(record);
     }
@@ -237,10 +250,10 @@ public class LogRecordAspect {
         log.error("切面处理过程中出错, 错误原因: {}", e.getMessage());
     }
 
-    private List<String> filterOperationFunctionNames(boolean isBeforeExecute,
+    private Set<String> filterOperationFunctionNames(boolean isBeforeExecute,
                                                       List<LogRecordOps> operations) {
 
-        List<String> filterFuncNames = new ArrayList<>(operations.size() * 2);
+        Set<String> filterFuncNames = new HashSet<>(operations.size() * 2);
         if (isBeforeExecute) {
             for (LogRecordOps op : operations) {
                 if (!op.isTemplate()) {
@@ -260,7 +273,7 @@ public class LogRecordAspect {
         return filterFuncNames;
     }
 
-    private void registerSpELFunction(List<String> registerFunctions,
+    private void registerSpELFunction(Set<String> registerFunctions,
                                       LogRecordEvaluationContext ctx) {
 
         Iterator<String> it = registerFunctions.iterator();

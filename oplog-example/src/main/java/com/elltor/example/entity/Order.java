@@ -12,5 +12,4 @@ public class Order {
     private String name;
     private String address;
     private String userid;
-    private LocalDateTime createTime;
 }

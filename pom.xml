@@ -18,9 +18,9 @@
     </parent>
 
     <groupId>com.elltor</groupId>
-    <artifactId>operator-log</artifactId>
+    <artifactId>oplog</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>operator-log</name>
+    <name>oplog</name>
 
     <description>Demo project for Spring Boot</description>
 
