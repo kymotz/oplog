@@ -6,12 +6,12 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 
 @Component
-public class DefaultParseFunction implements IParseFunction {
+public class DefaultParseFunctionImpl implements IParseFunction {
 
     @Override
     public Method functionMethod() {
         try {
-            return DefaultParseFunction.class.getDeclaredMethod("doNothing", String.class);
+            return DefaultParseFunctionImpl.class.getDeclaredMethod("doNothing", String.class);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
@@ -19,7 +19,8 @@ public class DefaultParseFunction implements IParseFunction {
         return null;
     }
 
-    String doNothing(String value) {
+    static String doNothing(String value) {
         return value;
     }
+
 }

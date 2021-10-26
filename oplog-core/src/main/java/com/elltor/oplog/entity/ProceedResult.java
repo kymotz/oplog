@@ -37,4 +37,5 @@ public class ProceedResult {
     public void setErrMsg(String errMsg) {
         this.errMsg = errMsg;
     }
+
 }

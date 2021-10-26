@@ -1,33 +1,41 @@
 package com.elltor.oplog.entity;
 
+import java.io.Serializable;
+
 /**
  * 与注解的字段保持一致
  */
-public class Record {
+public class Record implements Serializable {
 
     /** 成功模板 */
-    String success;
+    private String success;
 
     /** 失败模板 */
-    String fail;
+    private String fail;
 
     /** 操作用户 */
-    String operator;
+    private String operator;
 
     /** 业务编号 */
-    String bizNo;
+    private String bizNo;
 
     /** 分类 */
-    String category;
+    private String category;
 
     /** 详细信息/备注 */
-    String detail;
+    private String detail;
 
     /** 条件 */
-    String condition;
+    private String condition;
 
     /** 是否完成执行 */
-    boolean complete;
+    private boolean complete;
+
+    private long timestamp;
+
+    public Record() {
+
+    }
 
     public String getSuccess() {
         return success;
@@ -93,6 +101,14 @@ public class Record {
         this.complete = complete;
     }
 
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Record{");
@@ -104,6 +120,7 @@ public class Record {
         sb.append(", detail='").append(detail).append('\'');
         sb.append(", condition='").append(condition).append('\'');
         sb.append(", complete=").append(complete);
+        sb.append(", timestamp=").append(timestamp);
         sb.append('}');
         return sb.toString();
     }

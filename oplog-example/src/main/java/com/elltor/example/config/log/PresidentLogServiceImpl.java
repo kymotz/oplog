@@ -1,16 +1,16 @@
 package com.elltor.example.config.log;
 
 import com.elltor.oplog.entity.Record;
-import com.elltor.oplog.service.ILogRecordService;
+import com.elltor.oplog.service.AbstractLogRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-@Slf4j
 @Component
-public class PresidentLogServiceImpl implements ILogRecordService {
+@Slf4j
+public class PresidentLogServiceImpl extends AbstractLogRecordService {
 
     @Override
     public void record(Record record) {
-        log.info("oplog example receive log : {}", record);
+        log.info("example 包中 : {}", record);
     }
 }

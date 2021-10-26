@@ -6,7 +6,7 @@ import java.util.List;
  * 日志选项POJO
  */
 
-public class LogRecordOps {
+public class LogRecordOperation {
 
     private String key;
 
@@ -16,11 +16,13 @@ public class LogRecordOps {
 
     private List<String> functionNames;
 
-    public LogRecordOps() {
+    private boolean isBeforeExecute;
+
+    public LogRecordOperation() {
 
     }
 
-    public LogRecordOps(String key, String value) {
+    public LogRecordOperation(String key, String value) {
         this.key = key;
         this.value = value;
     }
@@ -57,13 +59,22 @@ public class LogRecordOps {
         this.functionNames = functionNames;
     }
 
+    public boolean isBeforeExecute() {
+        return isBeforeExecute;
+    }
+
+    public void setBeforeExecute(boolean beforeExecute) {
+        isBeforeExecute = beforeExecute;
+    }
+
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("LogRecordOps{");
+        final StringBuilder sb = new StringBuilder("LogRecordOperation{");
         sb.append("key='").append(key).append('\'');
         sb.append(", value='").append(value).append('\'');
         sb.append(", isTemplate=").append(isTemplate);
         sb.append(", functionNames=").append(functionNames);
+        sb.append(", isBeforeExecute=").append(isBeforeExecute);
         sb.append('}');
         return sb.toString();
     }

@@ -1,8 +1,9 @@
 package com.elltor.oplog.factory;
 
 import com.elltor.oplog.annotation.LogRecord;
-import com.elltor.oplog.entity.LogRecordOps;
+import com.elltor.oplog.entity.LogRecordOperation;
 
+import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,9 +29,14 @@ public class LogRecordOperationFactory {
 
     private static Set<Character> supportChars;
 
-    private static ConcurrentHashMap<LogRecord, List<LogRecordOps>> recordOperatorsCache = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<LogRecord, List<LogRecordOperation>> recordOperatorsCache = new ConcurrentHashMap<>();
 
-    public LogRecordOperationFactory() {
+    /**
+     * 解析函数工具方法
+     */
+    private ParseFunctionFactory parseFact;
+
+    public LogRecordOperationFactory(ParseFunctionFactory parseFact) {
         supportChars = new HashSet<>();
         StringBuilder sb = new StringBuilder(128);
         sb.append(base)
@@ -42,46 +48,47 @@ public class LogRecordOperationFactory {
         for (char c : sb.toString().toCharArray()) {
             supportChars.add(c);
         }
+        this.parseFact = parseFact;
     }
 
-    public List<LogRecordOps> computeLogRecordOperations(LogRecord logRecord) {
-        List<LogRecordOps> ops = recordOperatorsCache.get(logRecord);
+    public List<LogRecordOperation> computeLogRecordOperations(LogRecord logRecord) {
+        List<LogRecordOperation> ops = recordOperatorsCache.get(logRecord);
         if (ops != null) {
             return ops;
         }
         ops = new ArrayList<>(DEFAULT_OPS_SIZE);
         if (!logRecord.success().isEmpty()) {
-            LogRecordOps op = new LogRecordOps("success", logRecord.success());
+            LogRecordOperation op = new LogRecordOperation("success", logRecord.success());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.bizNo().isEmpty()) {
-            LogRecordOps op = new LogRecordOps("bizNo", logRecord.bizNo());
+            LogRecordOperation op = new LogRecordOperation("bizNo", logRecord.bizNo());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.operator().isEmpty()) {
-            LogRecordOps op = new LogRecordOps("operator", logRecord.operator());
+            LogRecordOperation op = new LogRecordOperation("operator", logRecord.operator());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.category().isEmpty()) {
-            LogRecordOps op = new LogRecordOps("category", logRecord.category());
+            LogRecordOperation op = new LogRecordOperation("category", logRecord.category());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.detail().isEmpty()) {
-            LogRecordOps op = new LogRecordOps("detail", logRecord.detail());
+            LogRecordOperation op = new LogRecordOperation("detail", logRecord.detail());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.condition().isEmpty()) {
-            LogRecordOps op = new LogRecordOps("condition", logRecord.condition());
+            LogRecordOperation op = new LogRecordOperation("condition", logRecord.condition());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.fail().isEmpty()) {
-            LogRecordOps op = new LogRecordOps("fail", logRecord.fail());
+            LogRecordOperation op = new LogRecordOperation("fail", logRecord.fail());
             fillTemplate(op);
             ops.add(op);
         }
@@ -89,13 +96,21 @@ public class LogRecordOperationFactory {
         return ops;
     }
 
-    private void fillTemplate(LogRecordOps op) {
+    private void fillTemplate(LogRecordOperation op) {
         String opValue = op.getValue();
         boolean containTemplate = opValue.contains(templatePrefix);
         op.setTemplate(containTemplate);
         if (containTemplate) {
             List<String> functionNames = parseAllTemplateMethods(opValue);
+            boolean isBeforeExecute = !functionNames.isEmpty();
+            for (String fn : functionNames) {
+                if (!parseFact.isBeforeFunction(fn)) {
+                    isBeforeExecute = false;
+                    break;
+                }
+            }
             op.setFunctionNames(functionNames);
+            op.setBeforeExecute(isBeforeExecute);
         } else {
             op.setFunctionNames(new ArrayList<>(0));
         }
