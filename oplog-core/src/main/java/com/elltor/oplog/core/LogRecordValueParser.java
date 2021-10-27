@@ -8,9 +8,9 @@ import org.springframework.context.expression.AnnotatedElementKey;
 
 public class LogRecordValueParser {
 
-    LogRecordEvaluationContext logRecordEvaluationContext;
+    private LogRecordEvaluationContext logRecordEvaluationContext;
 
-    LogRecordExpressionEvaluator expressionParser;
+    private LogRecordExpressionEvaluator expressionParser;
 
     public LogRecordValueParser(LogRecordEvaluationContext logRecordEvaluationContext,
                                 LogRecordExpressionEvaluator expressionParser) {

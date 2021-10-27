@@ -18,7 +18,7 @@ public class LogRecordExpressionEvaluator extends CachedExpressionEvaluator {
 
     private static final SpelExpressionParser EXPRESSION_PARSER = new CustomSpelExpressionParser();
 
-    Logger log = LoggerFactory.getLogger(LogRecordExpressionEvaluator.class);
+    private Logger log = LoggerFactory.getLogger(LogRecordExpressionEvaluator.class);
 
     public LogRecordExpressionEvaluator() {
         super(EXPRESSION_PARSER);
