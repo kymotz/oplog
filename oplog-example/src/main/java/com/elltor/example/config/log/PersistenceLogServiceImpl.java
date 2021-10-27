@@ -7,8 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class PresidentLogServiceImpl extends AbstractLogRecordService {
-
+public class PersistenceLogServiceImpl extends AbstractLogRecordService {
     @Override
     public void record(Record record) {
         log.info("example 包中 : {}", record);

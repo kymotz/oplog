@@ -30,7 +30,7 @@ public class UserController {
             category = LogType.USER)
     @ApiOperation("获取订单")
     @GetMapping("/{userid}")
-    public Object getOrderById(@PathVariable("userid") String userid) throws Exception {
+    public Object getUserByUserid(@PathVariable("userid") String userid) throws Exception {
         User u = new User();
         u.setUserid(userid);
         u.setUsername("zhangsan");
