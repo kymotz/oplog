@@ -4,7 +4,7 @@ A util for operating log. Easy to use.
 
 ## Features
 
-1、**Easy to use.** Provide starter, start and auto-configuration by annotation.
+1、**Easy to use.** Provide `starter`, and auto-configuration by annotation.
 
 2、**Flexibility.** Provide template to processing log, you can customize functions or expression, and provide log record control at the annotation level.
 
