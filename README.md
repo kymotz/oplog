@@ -4,13 +4,13 @@ A util for operating log. Easy to use.
 
 ## Features
 
-1、**Easy to use.** Provide `starter`, and auto-configuration by annotation.
+- **Easy to use.** Provide `starter`, and auto-configuration by annotation.
 
-2、**Flexibility.** Provide template to processing log, you can customize functions or expression, and provide log record control at the annotation level.
+- **Flexibility.** Provide template to processing log, you can customize functions or expression, and provide log record control at the annotation level.
 
-3、**Extensibility.** Provide custom functions, custom persistence operations, and custom log record operator.
+- **Extensibility.** Provide custom functions, custom persistence operations, and custom log record operator.
 
-4、**Performance.** Use asynchronous to process log persistence, and use caching to improve performance.
+- **Performance.** Use asynchronous to process log persistence, and use caching to improve performance.
 
 <br>
 
@@ -74,7 +74,7 @@ public class LogRecordOperatorGetImpl implements IOperatorGetService {
 
 ### Custom parse function
 
-To implement `IParseFunction` interface.
+To implement interface `IParseFunction` .
 
 notice:
 * custom method must be static. e.g. `userDetail` method.
@@ -107,7 +107,7 @@ public class UserDetailFunction implements IParseFunction {
 
 ### Special rule
 
-The field in `LogRecord` :
+The field in `LogRecord` annotation :
 
 * success : It's necessary field, can't be absent.
 * condition : It's boolean value, but `String` type.
@@ -122,3 +122,6 @@ The field in `LogRecord` :
 * Java Annotation
 * Spring Boot Auto-configuration
 
+## Implement reference
+
+> https://tech.meituan.com/2021/09/16/operational-logbook.html
