@@ -25,7 +25,7 @@ public class OrderServiceImpl implements IOrderService {
         Order order = new Order();
         order.setId(id);
         order.setName("男士卫衣一件");
-        order.setAddress("北京市海淀区西二旗安宁佳园1001");
+        order.setAddress("北京市海淀区");
         order.setUserid("uid123455");
         return order;
     }
