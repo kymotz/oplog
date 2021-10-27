@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LogRecordAspect {
 
     @Resource
-    private LogRecordOperationFactory logRecordOperationFactory;
+    private LogRecordOperationFactory opertionFact;
 
     /**
      * 模板解析
@@ -81,6 +81,12 @@ public class LogRecordAspect {
         AnnotatedElementKey targetMethodKey = new AnnotatedElementKey(targetMethod, targetClass);
         LogRecord logRecord = getTargetAnnotationOrUpdateCache(targetMethodKey, point);
 
+        // condition无效，直接并跳过记录日志
+        String conditionValue = logRecord.condition();
+        if (opertionFact.assertConditionIsFalse(conditionValue) || conditionValue.isEmpty() || conditionValue.isBlank()) {
+            return point.proceed();
+        }
+
         SimpleLogRecordContext simpleContext = new SimpleLogRecordContext();
         simpleContext.setArgs(point.getArgs());
         simpleContext.setTargetMethod(targetMethod);
@@ -88,10 +94,6 @@ public class LogRecordAspect {
         simpleContext.setLogRecord(logRecord);
 
         Object ret = null;
-
-        if (logRecord == null) {
-            return null;
-        }
 
         ProceedResult proceedResult = new ProceedResult(true, null, "");
 
@@ -101,7 +103,8 @@ public class LogRecordAspect {
         // 解析的LogRecord的属性
         List<LogRecordOperation> operations;
         Map<String, String> functionNameAndReturnMap = Collections.emptyMap();
-        operations = logRecordOperationFactory.computeLogRecordOperations(logRecord);
+        operations = opertionFact.computeLogRecordOperations(logRecord);
+
         // 过滤提前执行的函数
         Set<String> beforeExecuteFunctionNames = filterOperationFunctionNames(true, operations);
         // 业务逻辑执行前的自定义函数 解析
@@ -132,6 +135,7 @@ public class LogRecordAspect {
         } catch (Exception t) {
             proceedResult = new ProceedResult(false, t, "持久化存储日志方法执行出错");
         } finally {
+            // 方法出栈
             LogRecordContext.clear();
         }
         if (proceedResult.getThrowable() != null) {
@@ -181,10 +185,10 @@ public class LogRecordAspect {
     /**
      * 持久化存储操作日志
      *
-     * @param operations         目标操作集合
-     * @param beforeExecuteComplete           是否成功
-     * @param executeTemplateMap 提前执行的模板
-     * @param targetMethodKey    目标方法标识key
+     * @param operations            目标操作集合
+     * @param beforeExecuteComplete 是否成功
+     * @param executeTemplateMap    提前执行的模板
+     * @param targetMethodKey       目标方法标识key
      * @throws NoSuchFieldException
      * @throws IllegalAccessException
      */
@@ -215,9 +219,14 @@ public class LogRecordAspect {
                 String template = oldTemplate != null ? oldTemplate : value;
                 value = parser.parseExpression(template, targetMethodKey);
             }
-            final Field declaredField = clazz.getDeclaredField(key);
+            Field declaredField = clazz.getDeclaredField(key);
             declaredField.setAccessible(true);
             declaredField.set(record, value);
+        }
+
+        // 根据解析条件是否发送日志消息
+        if(!opertionFact.assertConditionIsTrue(record.getCondition())){
+            return;
         }
 
         // 操作用户
@@ -245,7 +254,7 @@ public class LogRecordAspect {
         Set<String> filterFuncNames = new HashSet<>(operations.size() * 2);
         if (isBeforeExecute) {
             for (LogRecordOperation op : operations) {
-                if (op.isTemplate() && op.isBeforeExecute()){
+                if (op.isTemplate() && op.isBeforeExecute()) {
                     filterFuncNames.addAll(op.getFunctionNames());
                 }
             }
