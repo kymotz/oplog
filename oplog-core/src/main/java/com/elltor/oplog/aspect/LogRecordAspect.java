@@ -82,7 +82,7 @@ public class LogRecordAspect {
         LogRecord logRecord = getTargetAnnotationOrUpdateCache(targetMethodKey, point);
 
         // condition无效，直接并跳过记录日志
-        String conditionValue = logRecord.condition();
+        String conditionValue = logRecord.condition().trim();
         if (opertionFact.assertConditionIsFalse(conditionValue) || conditionValue.isEmpty() || conditionValue.isBlank()) {
             return point.proceed();
         }
@@ -225,7 +225,7 @@ public class LogRecordAspect {
         }
 
         // 根据解析条件是否发送日志消息
-        if(!opertionFact.assertConditionIsTrue(record.getCondition())){
+        if (!opertionFact.assertConditionIsTrue(record.getCondition())) {
             return;
         }
 
@@ -238,7 +238,8 @@ public class LogRecordAspect {
             }
         }
 
-        record.setComplete(beforeExecuteComplete);
+        String successMsg = record.getSuccess();
+        record.setComplete(beforeExecuteComplete && !successMsg.isEmpty());
         record.setTimestamp(System.currentTimeMillis());
 
         // 发送消息
@@ -287,13 +288,13 @@ public class LogRecordAspect {
         LogRecord targetAnnotation = targetAnnotationCache.get(cacheKey);
         if (targetAnnotation != null) {
             return targetAnnotation;
-        } else {
-            MethodSignature signature = (MethodSignature) point.getSignature();
-            Method targetMethod = signature.getMethod();
-            LogRecord logRecord = targetMethod.getAnnotation(LogRecord.class);
-            targetAnnotationCache.put(cacheKey, logRecord);
-            return logRecord;
         }
+
+        MethodSignature signature = (MethodSignature) point.getSignature();
+        Method targetMethod = signature.getMethod();
+        LogRecord logRecord = targetMethod.getAnnotation(LogRecord.class);
+        targetAnnotationCache.put(cacheKey, logRecord);
+        return logRecord;
     }
 
 }

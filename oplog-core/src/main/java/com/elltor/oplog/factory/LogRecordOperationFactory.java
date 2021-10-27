@@ -177,7 +177,7 @@ public class LogRecordOperationFactory {
     private void processConditionField(LogRecord logRecord, List<LogRecordOperation> ops) {
         LogRecordOperation op;
         if (!logRecord.condition().isEmpty()) {
-            op = new LogRecordOperation("condition", logRecord.condition());
+            op = new LogRecordOperation("condition", logRecord.condition().trim());
             fillTemplate(op);
             String value = op.getValue();
             if (!SUPPORT_CONDITION.contains(value)) {

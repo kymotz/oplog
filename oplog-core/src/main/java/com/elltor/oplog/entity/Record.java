@@ -8,28 +8,28 @@ import java.io.Serializable;
 public class Record implements Serializable {
 
     /** 成功模板 */
-    private String success;
+    private String success = "";
 
     /** 失败模板 */
-    private String fail;
+    private String fail = "";
 
     /** 操作用户 */
-    private String operator;
+    private String operator = "";
 
     /** 业务编号 */
-    private String bizNo;
+    private String bizNo = "";
 
     /** 分类 */
-    private String category;
+    private String category = "";
 
     /** 详细信息/备注 */
-    private String detail;
+    private String detail = "";
 
     /** 条件 */
-    private String condition;
+    private String condition = "";
 
     /** 是否完成执行 */
-    private boolean complete;
+    private boolean complete = false;
 
     private long timestamp;
 

@@ -31,9 +31,9 @@ public class SwaggerConfig {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-                .title("XX项目接口文档")
-                .description("XX项目描述")
-                .contact(new Contact("作者", "作者URL", "作者Email"))
+                .title("oplog测试项目接口文档")
+                .description("你可以调用一些接口测试日志的功能")
+                .contact(new Contact("elltor", "https://elltor.com", "elltor@163.com"))
                 .version("1.0")
                 .build();
     }
