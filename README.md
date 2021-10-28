@@ -38,7 +38,7 @@ public class Application {
 }
 ```
 
-Add `@LogRecord` annotation to the method you need to log.
+Add `@LogRecord` annotation to the method you need to log. Here you can use the basic functions.
 
 > The return value and parameters of the method constitute the context of the log template.
 
@@ -48,6 +48,8 @@ Add `@LogRecord` annotation to the method you need to log.
         return new Object();
     }
 ```
+
+
 
 ### 2. Custom log persistence
 
