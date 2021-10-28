@@ -2,6 +2,9 @@
 
 A util for operating log. Easy to use.
 
+<p style="text-align:right;">[ English | <a href="/elltor/oplog/README.zh-CN.md">Chinese</a> ]</p>
+
+
 ## Features
 
 - **Easy to use.** Provide `starter`, and auto-configuration by annotation.
@@ -11,8 +14,6 @@ A util for operating log. Easy to use.
 - **Extensibility.** Provide custom functions, custom persistence operations, and custom log record operator.
 
 - **Performance.** Use asynchronous to process log persistence, and use caching to improve performance.
-
-<br>
 
 **Function Structure**
 
@@ -26,7 +27,7 @@ See `oplog-example` module. This is a guide, and you can learn some best practic
 
 Start the application, then click url `http://localhost:8080/swagger-ui/index.html` to visit swagger and try the function。
 
-### 1. How to use
+### 1. Start
 
 Enable log record function :
 
@@ -38,7 +39,7 @@ public class Application {
 }
 ```
 
-Add `@LogRecord` annotation to the method you need to log. Here you can use the basic functions.
+Add `@LogRecord` annotation to the method you need to log. 
 
 > The return value and parameters of the method constitute the context of the log template.
 
@@ -49,7 +50,7 @@ Add `@LogRecord` annotation to the method you need to log. Here you can use the 
     }
 ```
 
-
+OK, Here you can use the basic functions. 
 
 ### 2. Custom log persistence
 
@@ -109,7 +110,7 @@ public class UserDetailFunction implements IParseFunction {
         }
         return method;
     }
-    
+    // custom function
     static String userDetail(String userid){
         User u = userDao.getUserByUserid(userid);
         return u.getName()+" "+u.getSex()+" "+u.getAge();
