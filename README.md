@@ -26,9 +26,19 @@ See `oplog-example` module. This is a guide project, and you can learn some best
 
 Start the application, then click url `http://localhost:8080/swagger-ui/index.html`  visit swagger and try the function。
 
-### How to use
+### 1. How to use
 
-Add `@Log Record` annotation to the method you need to log.
+Enable log record function.
+
+```java
+@EnableLogRecord(tenant = "com.elltor.biz", mode = AdviceMode.PROXY)
+@SpringBootApplication
+public class Application {
+    //.....
+}
+```
+
+Add `@LogRecord` annotation to the method you need to log.
 
 > The return value and parameters of the method constitute the context of the log template.
 
@@ -39,7 +49,7 @@ Add `@Log Record` annotation to the method you need to log.
     }
 ```
 
-### Custom log persistence
+### 2. Custom log persistence
 
 To extend `AbstractLogRecordService` and implement `record(Record record)` method.
 
@@ -54,7 +64,7 @@ public class PersistenceLogServiceImpl extends AbstractLogRecordService {
 }
 ```
 
-### Custom log operator
+### 3. Custom log operator
 
 To implement interface `IOperatorGetService` and implement method.
 
@@ -72,9 +82,9 @@ public class LogRecordOperatorGetImpl implements IOperatorGetService {
 }
 ```
 
-### Custom parse function
+### 4. Custom parse function
 
-To implement interface `IParseFunction` .
+To implement interface `IParseFunction`.
 
 notice:
 * custom method must be static. e.g. `userDetail` method.
@@ -105,7 +115,7 @@ public class UserDetailFunction implements IParseFunction {
 }
 ```
 
-### Special rule
+### 5. Special rule
 
 The field in `LogRecord` annotation :
 
