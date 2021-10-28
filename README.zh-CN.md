@@ -22,9 +22,7 @@
 
 ### 前言
 
-`oplog-example` 是一个演示模块，你可以通过这个项目快速了解工具的使用和功能。
-
-启动项目, 点击链接 `http://localhost:8080/swagger-ui/index.html` 访问 swagger 文档就可以尝试功能了。
+`oplog-example` 是一个演示模块，你可以通过这个项目快速了解工具的使用和功能。 启动项目后点击链接 `http://localhost:8080/swagger-ui/index.html` 访问 swagger 文档就可以尝试功能了。
 
 ### 1. 开始使用
 
