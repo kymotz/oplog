@@ -22,7 +22,7 @@ A util for operating log. Easy to use.
 
 ### Preface
 
-See `oplog-example` module. This is a guide project, and you can learn some best practices through it.
+See `oplog-example` module. This is a guide, and you can learn some best practices through it.
 
 Start the application, then click url `http://localhost:8080/swagger-ui/index.html`  visit swagger and try the function。
 
