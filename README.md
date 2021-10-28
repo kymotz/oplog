@@ -6,7 +6,7 @@ A util for operating log. Easy to use.
 
 - **Easy to use.** Provide `starter`, and auto-configuration by annotation.
 
-- **Flexibility.** Provide template to processing log, you can customize functions or expression, and provide log record control at the annotation level.
+- **Flexibility.** We provide log processing templates,  customized functions or expressions and the log record control at the annotation level.
 
 - **Extensibility.** Provide custom functions, custom persistence operations, and custom log record operator.
 
@@ -24,11 +24,11 @@ A util for operating log. Easy to use.
 
 See `oplog-example` module. This is a guide, and you can learn some best practices through it.
 
-Start the application, then click url `http://localhost:8080/swagger-ui/index.html`  visit swagger and try the function。
+Start the application, then click url `http://localhost:8080/swagger-ui/index.html` to visit swagger and try the function。
 
 ### 1. How to use
 
-Enable log record function.
+Enable log record function :
 
 ```java
 @EnableLogRecord(tenant = "com.elltor.biz", mode = AdviceMode.PROXY)
@@ -68,7 +68,7 @@ public class PersistenceLogServiceImpl extends AbstractLogRecordService {
 
 ### 3. Custom log operator
 
-To implement interface `IOperatorGetService` and implement method.
+To implement interface `IOperatorGetService` :
 
 ```java
 @Component
@@ -86,11 +86,11 @@ public class LogRecordOperatorGetImpl implements IOperatorGetService {
 
 ### 4. Custom parse function
 
-To implement interface `IParseFunction`.
-
 notice:
 * custom method must be static. e.g. `userDetail` method.
 * return value always `String` type.
+
+To implement interface `IParseFunction` :
 
 ```java
 @Component
@@ -121,10 +121,10 @@ public class UserDetailFunction implements IParseFunction {
 
 The field in `LogRecord` annotation :
 
-* success : It's necessary field, can't be absent.
-* condition : It's boolean value, but `String` type.
+* success : It's a required field.
+* condition : It's a boolean value, but `String` type.
 * operator : It's always be filled with current user from the method implement by `IOperatorGetService`. Or else the content you specify.
-* fail : it's record fail method result.
+* fail : It's the result when the method fails. 
 
 
 ## Technology
