@@ -1,35 +1,32 @@
 # oplog
 
-A util for operating log. Easy to use.
+一个便于使用的操作日志工具。
 
-Language : <span style="text-align:right;">[ English | <a href="https://github.com/elltor/oplog/blob/main/README.zh-CN.md">Chinese</a> ]</span>
+语言 : <span style="text-align:right;">[ <a href="https://github.com/elltor/oplog">英语</a> | 中文 ]</span>
 
+## 特性
 
-## Features
+- **便于使用。** 提供 `starter`, 通过注解开启功能并自动配置。
 
-- **Easy to use.** Provide `starter`, and auto-configuration by annotation.
+- **灵活。** 工具提供了**自定义函数**、具有表达式解析的日志模版和注解层面的日志持久化控制。
 
-- **Flexibility.** We provide log processing templates,  customized functions or expressions and the log record control at the annotation level.
+- **可扩展。** 提供了自定义函数、自定义日志操作用户、自定义持久化日志方式。
 
-- **Extensibility.** Provide custom functions, custom persistence operations, and custom log record operator.
+- **性能。** 通过异步和缓存的方式提升处理性能。
 
-- **Performance.** Use asynchronous to process log persistence, and use caching to improve performance.
-
-**Function Structure**
+**业务逻辑架构**
 
 ![业务逻辑](https://oss.elltor.com/uploads/2021/bde9c178c76e131cefae3e7d7fcf428993663_1635345437328.png)
 
-## Usage
+## 使用方法
 
-### Preface
+### 前言
 
-See `oplog-example` module. This is a guide, and you can learn some best practices through it.
+`oplog-example` 是一个演示模块，你可以通过这个项目快速了解工具的使用和功能。 启动项目后点击链接 `http://localhost:8080/swagger-ui/index.html` 访问 swagger 文档就可以尝试功能了。
 
-Start the application, then click url `http://localhost:8080/swagger-ui/index.html` to visit swagger and try the function。
+### 1. 开始使用
 
-### 1. Start
-
-Enable log record function :
+开启日志记录功能 :
 
 ```java
 @EnableLogRecord(tenant = "com.elltor.biz", mode = AdviceMode.PROXY)
@@ -39,10 +36,10 @@ public class Application {
 }
 ```
 
-Add `@LogRecord` annotation to the method you need to log. 
+添加注解 `@LogRecord` 到你要记录日志的方法上。
 
-> The return value and parameters of the method constitute the context of the log template.
-
+> 被注解注释的方方法的入参和返回值将被作为日志模版的上下文。
+> 
 ```java
     @LogRecord(success = "查询了用户, 用户id : {#userid}", category = "user")
     public Object getUserByUserid(String userid) {
@@ -50,11 +47,11 @@ Add `@LogRecord` annotation to the method you need to log.
     }
 ```
 
-OK, Here you can use the basic functions. 
+好了，到这里你就可以使用基本的功能了。
 
-### 2. Custom log persistence
+### 2. 自定义日志持久化方式
 
-To extend `AbstractLogRecordService` and implement `record(Record record)` method.
+基础父类 `AbstractLogRecordService` 并且实现持久化方法 `record(Record record)` 。
 
 ```java
 @Component
@@ -67,9 +64,9 @@ public class PersistenceLogServiceImpl extends AbstractLogRecordService {
 }
 ```
 
-### 3. Custom log operator
+### 3. 自定义日志操作用户
 
-To implement interface `IOperatorGetService` :
+实现接口 `IOperatorGetService` :
 
 ```java
 @Component
@@ -85,13 +82,13 @@ public class LogRecordOperatorGetImpl implements IOperatorGetService {
 }
 ```
 
-### 4. Custom parse function
+### 4. 自定义解析函数
 
-notice:
-* custom method must be static. e.g. `userDetail` method.
-* return value always `String` type.
+注意:
+* 自定义的解析函数必须是静态方法. 如下面的 `userDetail` 方法。
+* 返回值总是 `String` 类型的。
 
-To implement interface `IParseFunction` :
+实现接口 `IParseFunction` :
 
 ```java
 @Component
@@ -118,23 +115,23 @@ public class UserDetailFunction implements IParseFunction {
 }
 ```
 
-### 5. Special rule
+### 5. 使用约定
 
-The field in `LogRecord` annotation :
+在注解 `LogRecord` 中的字段 :
 
-* success : It's a required field.
-* condition : It's a boolean value, but `String` type.
-* operator : It's always be filled with current user from the method implement by `IOperatorGetService`. Or else the content you specify.
-* fail : It's the result when the method fails. 
+* success : 成功方法模版，必填字段。
+* condition : 是否记录日志。值为boolean值, 但类型为 `String`。
+* operator : 总是通过实现 `IOperatorGetService` 接口的类获取或者由你指定。
+* fail : 用来记录方法执行失败的模版文案。
 
 
-## Technology
+## 使用技术
 
 * SpEL(Spring Expression Language)
 * Spring Message Service
 * Java Annotation
 * Spring Boot Auto-configuration
 
-## Implement reference
+## 实现参考
 
 > https://tech.meituan.com/2021/09/16/operational-logbook.html
