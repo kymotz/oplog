@@ -11,5 +11,6 @@ public class Order {
     private Long id;
     private String name;
     private String address;
-    private String userid;
+    /** 操作用户 id */
+    private Integer optId;
 }

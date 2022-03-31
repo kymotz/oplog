@@ -1,54 +1,58 @@
 package com.elltor.oplog.factory;
 
 import com.elltor.oplog.annotation.LogRecord;
-import com.elltor.oplog.entity.LogRecordOperation;
+import com.elltor.oplog.core.CustomSpelExpressionParser;
+import com.elltor.oplog.entity.LogRecordOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class LogRecordOperationFactory {
+public class LogRecordOptionFactory {
 
-    private final static int DEFAULT_OPS_SIZE = 7;
+    /**
+     * 等于 @LogRecord 字段数
+     */
+    private final static int DEFAULT_OPS_SIZE = 10;
 
     /**
      * @see com.elltor.oplog.core.CustomSpelExpressionParser
      */
-    private final String templatePrefix = "{";
+    private final String templatePrefix = CustomSpelExpressionParser.prefix;
 
     /**
      * @see com.elltor.oplog.core.CustomSpelExpressionParser
      */
-    private final String templateSuffix = "}";
+    private final String templateSuffix = CustomSpelExpressionParser.suffix;
 
-    private char prefix = '#';
+    private final char prefix = '#';
 
-    private char suffix = '(';
+    private final char suffix = '(';
 
-    private String base = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY_ ";
+    private final String basicCharacter = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY_ ";
 
     private static final BitSet SUPPORT_CHARS = new BitSet();
 
-    private static final Set<String> SUPPORT_CONDITION = new HashSet<>(4);
+    private static final Set<String> SUPPORT_CONDITION_VALUE = new HashSet<>(4);
 
-    private static final Set<String> TRUE_CONDITION = new HashSet<>(2);
+    private static final Set<String> TRUE_VALUE_CONDITION = new HashSet<>(2);
 
-    private static final Set<String> FALSE_CONDITION = new HashSet<>(2);
+    private static final Set<String> FALSE_VALUE_CONDITION = new HashSet<>(2);
 
-    private static ConcurrentHashMap<LogRecord, List<LogRecordOperation>> recordOperatorsCache = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<LogRecord, List<LogRecordOption>> recordOptionsCache = new ConcurrentHashMap<>();
 
-    private Logger log = LoggerFactory.getLogger(LogRecordOperationFactory.class);
+    private Logger log = LoggerFactory.getLogger(LogRecordOptionFactory.class);
 
     /**
      * 解析函数工具方法
      */
     private ParseFunctionFactory parseFact;
 
-    public LogRecordOperationFactory(ParseFunctionFactory parseFact) {
+    public LogRecordOptionFactory(ParseFunctionFactory parseFact) {
         this.parseFact = parseFact;
-        StringBuilder sb = new StringBuilder(128);
-        sb.append(base)
+        StringBuilder sb = new StringBuilder();
+        sb.append(basicCharacter)
                 .append(prefix)
                 .append(suffix)
                 .append(templatePrefix)
@@ -58,44 +62,43 @@ public class LogRecordOperationFactory {
             SUPPORT_CHARS.set(c);
         }
 
-        // condition
-        TRUE_CONDITION.add("true");
-        TRUE_CONDITION.add("TRUE");
-        FALSE_CONDITION.add("false");
-        FALSE_CONDITION.add("FALSE");
-        SUPPORT_CONDITION.addAll(TRUE_CONDITION);
-        SUPPORT_CONDITION.addAll(FALSE_CONDITION);
-
+        // condition 验证
+        TRUE_VALUE_CONDITION.add("true");
+        TRUE_VALUE_CONDITION.add("TRUE");
+        FALSE_VALUE_CONDITION.add("false");
+        FALSE_VALUE_CONDITION.add("FALSE");
+        SUPPORT_CONDITION_VALUE.addAll(TRUE_VALUE_CONDITION);
+        SUPPORT_CONDITION_VALUE.addAll(FALSE_VALUE_CONDITION);
     }
 
-    public List<LogRecordOperation> computeLogRecordOperations(LogRecord logRecord) {
-        List<LogRecordOperation> ops = recordOperatorsCache.get(logRecord);
+    public List<LogRecordOption> computeLogRecordOptions(LogRecord logRecord) {
+        List<LogRecordOption> ops = recordOptionsCache.get(logRecord);
         if (ops != null) {
             return ops;
         }
         ops = new ArrayList<>(DEFAULT_OPS_SIZE);
         if (!logRecord.success().isEmpty()) {
-            LogRecordOperation op = new LogRecordOperation("success", logRecord.success());
+            LogRecordOption op = new LogRecordOption("success", logRecord.success());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.bizNo().isEmpty()) {
-            LogRecordOperation op = new LogRecordOperation("bizNo", logRecord.bizNo());
+            LogRecordOption op = new LogRecordOption("bizNo", logRecord.bizNo());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.operator().isEmpty()) {
-            LogRecordOperation op = new LogRecordOperation("operator", logRecord.operator());
+            LogRecordOption op = new LogRecordOption("operator", logRecord.operator());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.category().isEmpty()) {
-            LogRecordOperation op = new LogRecordOperation("category", logRecord.category());
+            LogRecordOption op = new LogRecordOption("category", logRecord.category());
             fillTemplate(op);
             ops.add(op);
         }
         if (!logRecord.detail().isEmpty()) {
-            LogRecordOperation op = new LogRecordOperation("detail", logRecord.detail());
+            LogRecordOption op = new LogRecordOption("detail", logRecord.detail());
             fillTemplate(op);
             ops.add(op);
         }
@@ -104,26 +107,25 @@ public class LogRecordOperationFactory {
         processConditionField(logRecord, ops);
 
         if (!logRecord.fail().isEmpty()) {
-            LogRecordOperation op = new LogRecordOperation("fail", logRecord.fail());
+            LogRecordOption op = new LogRecordOption("fail", logRecord.fail());
             fillTemplate(op);
             ops.add(op);
         }
 
-        recordOperatorsCache.put(logRecord, ops);
+        recordOptionsCache.put(logRecord, ops);
         return ops;
     }
 
     public boolean assertConditionIsTrue(String conditionValue) {
-        return TRUE_CONDITION.contains(conditionValue);
+        return TRUE_VALUE_CONDITION.contains(conditionValue);
     }
 
     public boolean assertConditionIsFalse(String conditionValue) {
-        return FALSE_CONDITION.contains(conditionValue);
+        return FALSE_VALUE_CONDITION.contains(conditionValue);
     }
 
-    // private methods separator
 
-    private void fillTemplate(LogRecordOperation op) {
+    private void fillTemplate(LogRecordOption op) {
         String opValue = op.getValue();
         boolean containTemplate = opValue.contains(templatePrefix);
         op.setTemplate(containTemplate);
@@ -140,6 +142,11 @@ public class LogRecordOperationFactory {
             op.setBeforeExecute(isBeforeExecute);
         } else {
             op.setFunctionNames(new ArrayList<>(0));
+        }
+
+        // 调用返回值的必须在方法执行完毕解析
+        if (opValue.contains("#_ret")) {
+            op.setBeforeExecute(false);
         }
     }
 
@@ -174,35 +181,41 @@ public class LogRecordOperationFactory {
         return methods;
     }
 
-    private void processConditionField(LogRecord logRecord, List<LogRecordOperation> ops) {
-        LogRecordOperation op;
+    /**
+     * 处理条件
+     *
+     * @param logRecord 日志注解
+     * @param ops       日志注解的属性
+     */
+    private void processConditionField(LogRecord logRecord, List<LogRecordOption> ops) {
+        LogRecordOption op;
         if (!logRecord.condition().isEmpty()) {
-            op = new LogRecordOperation("condition", logRecord.condition().trim());
+            op = new LogRecordOption("condition", logRecord.condition().trim());
             fillTemplate(op);
             String value = op.getValue();
-            if (!SUPPORT_CONDITION.contains(value)) {
+            if (!SUPPORT_CONDITION_VALUE.contains(value)) {
                 if (op.getFunctionNames().isEmpty()) {
                     // 条件值不为空并且解析函数为空此时条件无效
                     log.error("[2]注解的 condition 字段存在错误，不符合规范，本条件日志不记录。注解信息 : {}", logRecord);
-                    fillBadConditionOperation(op);
+                    fillBadCondition(op);
                 }
             }
         } else {
             // 值为空字符串，默认条件无效
-            op = new LogRecordOperation("condition", "false");
-            fillBadConditionOperation(op);
+            op = new LogRecordOption("condition", "false");
+            fillBadCondition(op);
         }
         ops.add(op);
     }
 
-    private void fillBadConditionOperation(LogRecordOperation op) {
+    private void fillBadCondition(LogRecordOption op) {
         op.setValue("false");
         op.setFunctionNames(Collections.emptyList());
         op.setTemplate(false);
         op.setBeforeExecute(false);
     }
 
-// test code
+// test
 //    public static void main(String[] args) {
 //        String str = "res : #calc(#name,'asdf'，,#user.isAdmin(),#())------++++))))((()))#(#(  #isAdmin(#currentUser())";
 //        List<String> strings = parseAllTemplateMethods(str);

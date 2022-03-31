@@ -5,7 +5,6 @@ import java.lang.annotation.*;
 /**
  * 日志注解
  */
-
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
@@ -43,9 +42,9 @@ public @interface LogRecord {
     String detail() default "";
 
     /**
-     * 是否记录日志的条件，字符串boolean值，只能为true/false或TRUE/FALSE <p>
+     * 是否记录日志的条件，字符串类型boolean值，只能为true/false或TRUE/FALSE <p>
      *
-     * eg ：
+     * 使用示例 ：
      * <pre>
      * condition = "true"
      * condition = "false"

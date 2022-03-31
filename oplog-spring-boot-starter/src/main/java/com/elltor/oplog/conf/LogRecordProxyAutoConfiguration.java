@@ -2,7 +2,7 @@ package com.elltor.oplog.conf;
 
 import com.elltor.oplog.annotation.EnableLogRecord;
 import com.elltor.oplog.core.LogRecordExpressionEvaluator;
-import com.elltor.oplog.factory.LogRecordOperationFactory;
+import com.elltor.oplog.factory.LogRecordOptionFactory;
 import com.elltor.oplog.core.LogRecordValueParser;
 import com.elltor.oplog.factory.ParseFunctionFactory;
 import com.elltor.oplog.service.AbstractLogRecordService;
@@ -45,8 +45,8 @@ public class LogRecordProxyAutoConfiguration implements ImportAware {
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public LogRecordOperationFactory logRecordOperationFactory(@Autowired ParseFunctionFactory parseFact) {
-        return new LogRecordOperationFactory(parseFact);
+    public LogRecordOptionFactory logRecordOperationFactory(@Autowired ParseFunctionFactory parseFact) {
+        return new LogRecordOptionFactory(parseFact);
     }
 
     @Bean

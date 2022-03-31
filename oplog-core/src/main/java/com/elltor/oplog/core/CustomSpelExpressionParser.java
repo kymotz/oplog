@@ -5,12 +5,20 @@ import org.springframework.expression.ParseException;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
-
+/**
+ * 自定义 SpEL 解析器
+ */
 public class CustomSpelExpressionParser extends SpelExpressionParser {
 
-    private String prefix = "{";
+    /**
+     * EL前缀
+     */
+    public static final String prefix = "{";
 
-    private String suffix = "}";
+    /**
+     * EL后缀
+     */
+    public static final String suffix = "}";
 
     private TemplateParserContext templateParserContext;
 
@@ -21,22 +29,6 @@ public class CustomSpelExpressionParser extends SpelExpressionParser {
     @Override
     public Expression parseExpression(String expressionString) throws ParseException {
         return parseExpression(expressionString, templateParserContext);
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
-    public String getSuffix() {
-        return suffix;
-    }
-
-    public void setSuffix(String suffix) {
-        this.suffix = suffix;
     }
 
 }

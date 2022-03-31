@@ -5,6 +5,9 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
+/**
+ * 订单订单详情 自定义函数
+ */
 @Component
 public class OrderDetailParseFunction implements IParseFunction {
     @Override
@@ -24,7 +27,7 @@ public class OrderDetailParseFunction implements IParseFunction {
     }
 
     static String orderDetail(Long id) {
-        return "【id : " + id + "订单名称： 男士卫衣一件 地址：北京市海淀区】";
+        return "【 id : " + id + "订单名称：男士卫衣一件 地址：北京市海淀区 】";
     }
 
 }

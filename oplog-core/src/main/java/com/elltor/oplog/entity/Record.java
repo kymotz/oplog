@@ -1,5 +1,7 @@
 package com.elltor.oplog.entity;
 
+import com.elltor.oplog.annotation.LogRecord;
+
 import java.io.Serializable;
 
 /**
@@ -25,10 +27,13 @@ public class Record implements Serializable {
     /** 详细信息/备注 */
     private String detail = "";
 
-    /** 条件 */
+    /**
+     * 条件，String 类型 Boolean 值，表示是否要记录此日志，"true":记录   "false": 不记录
+     * @see LogRecord#condition()
+     */
     private String condition = "";
 
-    /** 是否完成执行 */
+    /** 是否完成执行，true：方法执行完成  false：方法执行过程中出错 */
     private boolean complete = false;
 
     private long timestamp;

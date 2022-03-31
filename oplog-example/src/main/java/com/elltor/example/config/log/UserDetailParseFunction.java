@@ -5,6 +5,9 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 
+/**
+ * 解析用户 自定义方法
+ */
 @Component
 public class UserDetailParseFunction implements IParseFunction {
 

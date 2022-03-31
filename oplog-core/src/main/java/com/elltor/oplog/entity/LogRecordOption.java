@@ -6,7 +6,7 @@ import java.util.List;
  * 日志选项POJO
  */
 
-public class LogRecordOperation {
+public class LogRecordOption {
 
     private String key;
 
@@ -18,11 +18,11 @@ public class LogRecordOperation {
 
     private boolean isBeforeExecute;
 
-    public LogRecordOperation() {
+    public LogRecordOption() {
 
     }
 
-    public LogRecordOperation(String key, String value) {
+    public LogRecordOption(String key, String value) {
         this.key = key;
         this.value = value;
     }

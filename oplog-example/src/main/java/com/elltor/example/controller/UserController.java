@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 特殊功能演示
+ */
 @Api(tags = "用户接口")
 @RestController
 @RequestMapping("/user")
