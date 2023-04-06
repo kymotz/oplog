@@ -24,4 +24,13 @@ public interface IParseFunction {
      */
     Method functionMethod();
 
+    /**
+     * 将自定义函数注册到IParseFunction
+     * @param method
+     * @return
+     */
+    static IParseFunction fromLambda(Method method) {
+        return () -> method;
+    }
+
 }
