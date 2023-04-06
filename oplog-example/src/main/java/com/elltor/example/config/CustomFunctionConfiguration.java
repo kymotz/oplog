@@ -10,36 +10,28 @@ import java.lang.reflect.Method;
 @Configuration
 public class CustomFunctionConfiguration {
 
-    @Bean
-    public IParseFunction judgingAdminFunction() {
+    private IParseFunction createParseFunction(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
         try {
-            Method method = CustomFunctions.class.getDeclaredMethod("isAdmin", Integer.class);
+            Method method = clazz.getDeclaredMethod(methodName, parameterTypes);
             return IParseFunction.fromLambda(method);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    @Bean
+    public IParseFunction judgingAdminFunction() {
+        return createParseFunction(CustomFunctions.class, "isAdmin", Integer.class);
     }
 
     @Bean
     public IParseFunction userDetailParseFunction() {
-        try {
-            Method method = CustomFunctions.class.getDeclaredMethod("userDetail", String.class);
-            return IParseFunction.fromLambda(method);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return createParseFunction(CustomFunctions.class, "userDetail", String.class);
     }
 
     @Bean
-    public IParseFunction orderDetailParseFunction() {
-        try {
-            Method method = CustomFunctions.class.getDeclaredMethod("orderDetail", Long.class);
-            return IParseFunction.fromLambda(method);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public IParseFunction getOldOrderParseFunction() {
+        return createParseFunction(CustomFunctions.class, "getOldOrder", Long.class);
     }
 }
