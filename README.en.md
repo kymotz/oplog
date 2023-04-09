@@ -2,7 +2,7 @@
 
 A util for operating log. Easy to use.
 
-Language : <span style="text-align:right;">[ English | <a href="https://github.com/elltor/oplog/blob/main/README.zh-CN.md">Chinese</a> ]</span>
+Language : <span style="text-align:right;">[ English | <a href="https://github.com/elltor/oplog">Chinese</a> ]</span>
 
 
 ## Features

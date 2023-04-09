@@ -2,7 +2,8 @@
 
 一个便于使用的操作日志工具。
 
-语言 : <span style="text-align:right;">[ <a href="https://github.com/elltor/oplog">英语</a> | 中文 ]</span>
+语言 : <span style="text-align:right;">[ <a href="https://github.com/elltor/oplog/blob/main/README.en.md">英语</a> | 中文 ]
+</span>
 
 ## 功能
 
