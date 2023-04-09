@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 /**
  * 解析用户 自定义方法
  */
-@Component
+//@Component
 public class UserDetailParseFunction implements IParseFunction {
 
     @Override
@@ -22,7 +22,6 @@ public class UserDetailParseFunction implements IParseFunction {
     }
 
     private static String userDetail(String username){
-        String res = username + " 男" + " 18";
-        return res;
+        return username + " 男" + " 18";
     }
 }

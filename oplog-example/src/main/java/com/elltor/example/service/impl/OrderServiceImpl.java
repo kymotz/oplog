@@ -19,12 +19,12 @@ public class OrderServiceImpl implements IOrderService {
         return order;
     }
 
-// 测试嵌套注解
-//    @LogRecord(success = "{#userDetail(#order.name)} 创建了订单成功，订单号为：{#order.id}",
-//            bizNo = "{#order.id}",
-//            fail = "返回信息 订单id为: {#order.id}, 失败信息 errMsg : {#_errMsg}",
-//            category = "ORDER_LOG",
-//            condition = "{(new Integer(#calc(#order.id))>100)+''}")
+    // 嵌套注解
+    @LogRecord(success = "{#userDetail(#order.name)} 创建了订单成功，订单号为：{#order.id}",
+            bizNo = "{#order.id}",
+            fail = "返回信息 订单id为: {#order.id}, 失败信息 errMsg : {#_errMsg}",
+            category = "ORDER_LOG",
+            condition = "{(new Integer(#calc(#order.id))>100)+''}")
     @Override
     public void insert(Order order) throws Exception {
         log.info("成功创建一个订单, 订单id = {}", order.getId());

@@ -25,13 +25,13 @@ public class UserController {
      * 用户查询
      */
     @LogRecord(
-            success = "查询了用户: {#orderDetail(#id)}",
+            success = "查询了用户: {#userDetail(#id)}",
             fail = "查询用户失败",
             bizNo = "{#userid}",
             // 对象不能想Java中直接转为字符串, 需要调用toString方法
             detail = "请求结果，msg：{#_ret.msg} status:{#_ret.status} data : {#_ret.data.toString()}",
             category = LogType.USER)
-    @ApiOperation("获取订单")
+    @ApiOperation("获取用户信息")
     @GetMapping("/{userid}")
     public Object getUserByUserid(@PathVariable("userid") String userid) throws Exception {
         User u = new User();

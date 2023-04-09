@@ -1,6 +1,6 @@
 package com.elltor.example.config;
 
-import com.elltor.example.config.Functions.CustomFunctions;
+import com.elltor.example.config.functions.CustomFunctions;
 import com.elltor.oplog.service.IParseFunction;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +32,6 @@ public class CustomFunctionConfiguration {
 
     @Bean
     public IParseFunction getOldOrderParseFunction() {
-        return createParseFunction(CustomFunctions.class, "getOldOrder", Long.class);
+        return createParseFunction(CustomFunctions.class, "orderDetail", Long.class);
     }
 }

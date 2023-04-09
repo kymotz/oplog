@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 /**
  * 自定义函数 判断用户是否为管理员
  */
-@Component
+//@Component
 public class JudgingAdminFunction implements IParseFunction {
 
     @Override

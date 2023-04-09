@@ -1,4 +1,4 @@
-package com.elltor.example.config.Functions;
+package com.elltor.example.config.functions;
 
 public class CustomFunctions {
 
@@ -10,8 +10,7 @@ public class CustomFunctions {
     }
 
     static String userDetail(String username) {
-        String res = username + " 男" + " 18";
-        return res;
+        return username + " 男" + " 18";
     }
 
     static String orderDetail(Long id) {

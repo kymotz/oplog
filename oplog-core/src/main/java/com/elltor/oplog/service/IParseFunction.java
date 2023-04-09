@@ -18,16 +18,13 @@ public interface IParseFunction {
     }
 
     /**
-     * 返回自定义SpEL的静态方法的方法对象
-     *
-     * @return
+     * 返回自定义SpEL的静态方法的方法对象。必须是静态方法。
      */
     Method functionMethod();
 
     /**
      * 将自定义函数注册到IParseFunction
-     * @param method
-     * @return
+     * @param method 注册到 SpEL 上下文中的方法， aka 函数。此函数必须是静态方法。
      */
     static IParseFunction fromLambda(Method method) {
         return () -> method;
